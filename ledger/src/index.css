@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens. Light and dark are tuned separately, not inverted:
+ * dark is a deep ink with lifted, slightly brighter accents; light is a warm
+ * paper with deeper, more saturated accents so they hold contrast.
+ */
+@layer base {
+  :root {
+    --radius: 1.25rem;
+    --background: 40 33% 97%;
+    --surface: 38 30% 94%;
+    --foreground: 232 24% 12%;
+    --card: 40 40% 99.5%;
+    --card-foreground: 232 24% 12%;
+    --popover: 40 40% 99.5%;
+    --popover-foreground: 232 24% 12%;
+    --primary: 160 64% 32%;
+    --primary-foreground: 40 40% 99%;
+    --secondary: 36 24% 91%;
+    --secondary-foreground: 232 24% 16%;
+    --muted: 36 22% 92%;
+    --muted-foreground: 230 8% 44%;
+    --accent: 36 30% 90%;
+    --accent-foreground: 232 24% 14%;
+    --border: 34 20% 87%;
+    --input: 34 20% 85%;
+    --ring: 160 64% 32%;
+    --emerald: 160 64% 32%;
+    --emerald-soft: 152 50% 90%;
+    --coral: 8 70% 54%;
+    --coral-soft: 10 85% 94%;
+    --amber: 32 92% 44%;
+    --amber-soft: 40 95% 90%;
+    --shadow: 30 30% 30%;
+    --card-grad-a: 40 50% 100%;
+    --card-grad-b: 36 35% 96%;
+    --hero-a: 160 55% 30%;
+    --hero-b: 178 50% 24%;
+    --hero-c: 30 80% 60%;
+
+    /* Categorical chart slots (validated, fixed order, never cycled) */
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --series-3: #1baf7a;
+    --series-4: #eda100;
+    --series-5: #e87ba4;
+    --series-6: #008300;
+    --series-7: #4a3aa7;
+    --series-8: #e34948;
+    color-scheme: light;
+  }
+
+  .dark {
+    --background: 230 30% 6%;
+    --surface: 230 26% 8%;
+    --foreground: 40 30% 95%;
+    --card: 230 24% 10%;
+    --card-foreground: 40 30% 95%;
+    --popover: 230 24% 11%;
+    --popover-foreground: 40 30% 95%;
+    --primary: 158 56% 52%;
+    --primary-foreground: 230 30% 7%;
+    --secondary: 230 18% 15%;
+    --secondary-foreground: 40 30% 94%;
+    --muted: 230 18% 14%;
+    --muted-foreground: 230 10% 62%;
+    --accent: 230 18% 17%;
+    --accent-foreground: 40 30% 95%;
+    --border: 230 18% 16%;
+    --input: 230 18% 20%;
+    --ring: 158 56% 52%;
+    --emerald: 158 56% 52%;
+    --emerald-soft: 158 40% 16%;
+    --coral: 10 88% 69%;
+    --coral-soft: 10 45% 17%;
+    --amber: 38 92% 62%;
+    --amber-soft: 38 50% 16%;
+    --shadow: 230 50% 2%;
+    --card-grad-a: 230 24% 12%;
+    --card-grad-b: 230 26% 9%;
+    --hero-a: 160 60% 26%;
+    --hero-b: 200 55% 18%;
+    --hero-c: 28 85% 55%;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+    color-scheme: dark;
+  }
+
+  * {
+    @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    background: hsl(var(--background));
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01", "ss03";
+    overscroll-behavior: none;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  input,
+  textarea {
+    -webkit-user-select: text;
+    user-select: text;
+    /* >= 16px stops iOS Safari from zooming on focus */
+    font-size: 16px;
+  }
+}
+
+@layer components {
+  .num {
+    @apply font-mono tabular-nums;
+    font-feature-settings: "tnum", "zero";
+    letter-spacing: -0.02em;
+  }
+
+  .surface-card {
+    background-image: linear-gradient(160deg, hsl(var(--card-grad-a)), hsl(var(--card-grad-b)));
+    @apply rounded-3xl border border-border/70 shadow-soft;
+  }
+
+  .glass {
+    @apply border border-border/60 bg-card/70 backdrop-blur-xl backdrop-saturate-150;
+  }
+
+  .hero-gradient {
+    background:
+      radial-gradient(110% 80% at 100% 0%, hsl(var(--hero-c) / 0.42), transparent 50%),
+      radial-gradient(90% 120% at 0% 100%, hsl(var(--hero-b)), transparent 70%),
+      linear-gradient(140deg, hsl(var(--hero-a)), hsl(var(--hero-b)));
+  }
+
+  .noise::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0.07;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  .scroll-area {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
