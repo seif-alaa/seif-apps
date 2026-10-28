@@ -4,7 +4,7 @@ import { reducedMotion, settings } from './lib/settings';
 import { useStore } from './lib/store';
 import { joinRoom, leaveRoom, net } from './net/net';
 import { audio } from './audio/audio';
-import { codeFromUrl, initNative } from './native/platform';
+import { codeFromUrl, initNative, offlineDemo } from './native/platform';
 import { OnlineGameScreen, PracticeScreen } from './screens/GameScreen';
 import { HomeScreen, JoinScreen, LoadingScreen, LobbyScreen, QuickPlayScreen, UnreachableScreen } from './screens/Menus';
 import { ResultsScreen } from './screens/Results';
@@ -76,9 +76,10 @@ export function App() {
     const fallback = setTimeout(() => {
       if (app.get().screen === 'loading') {
         if (linkCode) app.set({ pendingCode: linkCode });
-        go(app.get().conn === 'online' ? 'home' : 'unreachable');
+        if (offlineDemo) go(settings.get().tutorialDone ? 'home' : 'tutorial');
+        else go(app.get().conn === 'online' ? 'home' : 'unreachable');
       }
-    }, 4500);
+    }, offlineDemo ? 900 : 4500);
     const kick = setTimeout(() => app.set({}), 600);
     return () => {
       unsub();
@@ -116,7 +117,7 @@ export function App() {
           </div>
         ))}
       </div>
-      {(conn === 'reconnecting' || conn === 'offline') && screen !== 'loading' && screen !== 'practice' && screen !== 'tutorial' && screen !== 'unreachable' && (
+      {!offlineDemo && (conn === 'reconnecting' || conn === 'offline') && screen !== 'loading' && screen !== 'practice' && screen !== 'tutorial' && screen !== 'unreachable' && (
         <div className="conn-banner" role="status">
           {conn === 'reconnecting' ? <span className="spinner" /> : <IconOffline size={18} />}
           {conn === 'reconnecting' ? (inMatch ? 'Connection lost. Reconnecting, your board is safe for 30 seconds' : 'Reconnecting') : 'Offline. Retrying'}

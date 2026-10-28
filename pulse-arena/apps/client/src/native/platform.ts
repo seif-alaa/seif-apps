@@ -2,6 +2,9 @@ import { Capacitor } from '@capacitor/core';
 import { settings } from '../lib/settings';
 
 export const isNative = Capacitor.isNativePlatform();
+
+/** Solo preview build: no server connection, tutorial and practice only. */
+export const offlineDemo = import.meta.env.VITE_OFFLINE_DEMO === '1';
 export const platform = Capacitor.getPlatform(); // 'web' | 'ios' | 'android'
 
 /** Game server origin. Empty string means "same origin as the page". */

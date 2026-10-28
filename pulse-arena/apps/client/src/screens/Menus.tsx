@@ -7,7 +7,7 @@ import { app, go, toast } from '../lib/app';
 import { settings } from '../lib/settings';
 import { useStore } from '../lib/store';
 import { cancelQuickPlay, createRoom, describeError, joinRoom, leaveRoom, net, startQuickPlay } from '../net/net';
-import { copyText, serverUrl, shareInvite } from '../native/platform';
+import { copyText, offlineDemo, serverUrl, shareInvite } from '../native/platform';
 import { IconBack, IconBook, IconCheck, IconCopy, IconCrown, IconEnter, IconPlay, IconSettings, IconShare, IconTarget, IconUsers, LogoMark } from '../ui/icons';
 
 export const SEAT_COLORS = ['#3DE0D0', '#FFC23D', '#9B7BFF', '#FF6A3D', '#4C9DFF'];
@@ -80,6 +80,7 @@ function NicknameChip() {
 function useServerStats() {
   const [stats, setStats] = useState<{ online: number; matchesInProgress: number } | null>(null);
   useEffect(() => {
+    if (offlineDemo) return;
     let alive = true;
     const load = () =>
       fetch(`${serverUrl()}/api/stats`)
@@ -154,7 +155,7 @@ export function HomeScreen() {
           </button>
         </div>
         <div className="error-text" role="alert">
-          {error || (conn === 'offline' ? 'Cannot reach the game server. Practice is available offline.' : '')}
+          {error || (offlineDemo ? 'Solo preview. Online matches need the game server running.' : conn === 'offline' ? 'Cannot reach the game server. Practice is available offline.' : '')}
         </div>
         <div className="stats-line" aria-live="polite">
           {stats && online ? (

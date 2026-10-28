@@ -9,3 +9,4 @@ apps/client/android/app/build
 apps/client/android/.gradle
 apps/client/ios/App/Pods
 apps/client/ios/App/build
+dist-demo

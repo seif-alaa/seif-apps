@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -p . && vite build",
+    "build:demo": "VITE_OFFLINE_DEMO=1 vite build --base ./ --outDir dist-demo --sourcemap false",
     "preview": "vite preview --host"
   },
   "dependencies": {

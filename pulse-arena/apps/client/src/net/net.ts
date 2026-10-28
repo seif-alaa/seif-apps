@@ -2,7 +2,7 @@ import { io, type Socket } from 'socket.io-client';
 import { PROTOCOL_VERSION, type AckOf, type PayloadOf, type ClientToServer, type ErrorCode, type SelfUpdate, type ServerToClient } from '@pulse/protocol';
 import { app, go, matchStore, toast } from '../lib/app';
 import { ensureNickname } from '../lib/settings';
-import { serverUrl } from '../native/platform';
+import { offlineDemo, serverUrl } from '../native/platform';
 
 type ClientSocket = Socket<ServerToClient, ClientToServer>;
 
@@ -68,6 +68,10 @@ class Net {
 
   connect(): void {
     if (this.socket) return;
+    if (offlineDemo) {
+      app.set({ conn: 'offline' });
+      return;
+    }
     const url = serverUrl();
     const socket: ClientSocket = io(url || undefined, {
       transports: ['websocket', 'polling'],
