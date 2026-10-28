@@ -428,8 +428,12 @@ export function PlayField({
   };
 
   const onSlotKey = (slot: number, e: React.KeyboardEvent) => {
+    // While a piece is already selected, Enter confirms the placement (handled on window).
+    if (kbSlot === slot) return;
     if ((e.key === 'Enter' || e.key === ' ') && !swapArmed && view.tray[slot] && view.alive) {
       e.preventDefault();
+      // The placement listener is attached synchronously; keep this keystroke from reaching it.
+      e.stopPropagation();
       cursor.current = { col: 3, row: 3 };
       setKbSlot(slot);
       audio.pickup();

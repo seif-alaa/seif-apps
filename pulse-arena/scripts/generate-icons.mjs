@@ -1,7 +1,7 @@
 // Renders assets/icon.svg into every icon size the web app and native projects need.
 // Uses the locally installed Playwright Chromium; no external services.
 import { chromium } from 'playwright';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname;
@@ -40,5 +40,28 @@ for (const [rel, size, scale = 1, round = false] of targets) {
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, await page.screenshot({ omitBackground: scale >= 1 && !round, type: 'png' }));
   console.log(`icon ${rel} ${size}px`);
+}
+// Splash screens: replace every template splash image with our mark on the game background,
+// keeping each file's original pixel dimensions.
+function findSplashes(dir, out = []) {
+  if (!existsSync(dir)) return out;
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) findSplashes(p, out);
+    else if (/^splash.*\.png$/.test(name)) out.push(p);
+  }
+  return out;
+}
+const splashes = [...findSplashes(join(client, 'android/app/src/main/res')), ...findSplashes(join(client, 'ios/App/App/Assets.xcassets/Splash.imageset'))];
+for (const file of splashes) {
+  const buf = readFileSync(file);
+  const w = buf.readUInt32BE(16);
+  const h = buf.readUInt32BE(20);
+  const mark = Math.round(Math.min(w, h) * 0.26);
+  await page.setViewportSize({ width: w, height: h });
+  await page.setContent(`<html><body style="margin:0;width:${w}px;height:${h}px;background:#07090d;display:grid;place-items:center;overflow:hidden">
+    <div style="width:${mark}px;height:${mark}px;border-radius:${Math.round(mark * 0.22)}px;overflow:hidden">${svg.replace('<svg ', `<svg width="${mark}" height="${mark}" `)}</div></body></html>`);
+  writeFileSync(file, await page.screenshot({ type: 'png' }));
+  console.log(`splash ${file.slice(client.length + 1)} ${w}x${h}`);
 }
 await browser.close();
