@@ -1,0 +1,34 @@
+# Example Fly.io configuration. Copy to fly.toml and adjust the app name and region.
+# Secrets: fly secrets set SESSION_SECRET=... CORS_ORIGINS=https://your.domain
+app = "pulse-arena-example"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8787"
+  TRUST_PROXY = "true"
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+  # Keep one machine running: rooms live in memory, so a stopped machine ends matches.
+  auto_stop_machines = "off"
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    soft_limit = 1500
+    hard_limit = 2000
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  path = "/healthz"
+  timeout = "3s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

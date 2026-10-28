@@ -24,7 +24,7 @@
     "multi": "node scripts/multi-client.mjs",
     "loadtest": "tsx scripts/loadtest.ts",
     "icons": "node scripts/generate-icons.mjs",
-    "cap:sync": "npm run build -w @pulse/client && npx -w @pulse/client cap sync"
+    "cap:sync": "npm run build -w @pulse/client && cd apps/client && npx cap sync"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

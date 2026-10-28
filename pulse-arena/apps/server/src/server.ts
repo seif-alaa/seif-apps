@@ -137,7 +137,8 @@ export function createGameServer(config: ServerConfig, options: GameServerOption
       return;
     }
     if (!existsSync(file) || statSync(file).isDirectory()) file = join(staticRoot, 'index.html');
-    const type = MIME[extname(file)] ?? 'application/octet-stream';
+    // Universal-link association files have no extension but must be served as JSON.
+    const type = file.endsWith('apple-app-site-association') ? 'application/json' : (MIME[extname(file)] ?? 'application/octet-stream');
     const immutable = file.includes(`${join(staticRoot, 'assets')}`);
     res.writeHead(200, {
       'Content-Type': type,

@@ -1899,3 +1899,8 @@ input[type='range'] {
     min-height: 92px;
   }
 }
+
+/* The countdown animation ends transparent; with reduced motion show the number statically. */
+.reduce-motion .countdown-num {
+  animation: none !important;
+}
