@@ -43,7 +43,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     corsOrigins: !origins || origins === '*' ? (production ? [] : '*') : origins.split(',').map((s) => s.trim()).filter(Boolean),
     databaseUrl: env.DATABASE_URL || null,
     staticDir: env.STATIC_DIR || null,
-    defaultDurationSec: Math.min(MAX_DURATION_SEC, Math.max(MIN_DURATION_SEC, num(env.MATCH_DURATION_SEC, DEFAULT_DURATION_SEC))),
+    // Outside production, short matches are allowed for automated tests.
+    defaultDurationSec: Math.min(MAX_DURATION_SEC, Math.max(production ? MIN_DURATION_SEC : 10, num(env.MATCH_DURATION_SEC, DEFAULT_DURATION_SEC))),
     reconnectWindowMs: num(env.RECONNECT_WINDOW_SEC, 30) * 1000,
     lobbyGraceMs: 20_000,
     idleRoomMs: 120_000,

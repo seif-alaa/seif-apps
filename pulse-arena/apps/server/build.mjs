@@ -1,4 +1,5 @@
-// Bundles the server and the shared workspace packages into dist/index.js.
+// Bundles the server together with the shared workspace packages (engine, protocol)
+// into dist/index.js. Runtime npm dependencies stay external and are installed normally.
 import { build } from 'esbuild';
 
 await build({
@@ -9,16 +10,6 @@ await build({
   target: 'node20',
   format: 'esm',
   sourcemap: true,
-  packages: 'external',
-  // Workspace packages are TypeScript sources, so they must be bundled.
-  plugins: [
-    {
-      name: 'bundle-workspace',
-      setup(b) {
-        b.onResolve({ filter: /^@pulse\// }, () => undefined);
-      },
-    },
-  ],
   external: ['socket.io', 'pg'],
   logLevel: 'info',
 });

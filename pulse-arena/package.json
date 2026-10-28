@@ -20,7 +20,7 @@
     "typecheck": "tsc -p packages/engine && tsc -p packages/protocol && tsc -p apps/server && tsc -p apps/client",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "node e2e/run-e2e.mjs",
+    "test:e2e": "tsx e2e/run-e2e.ts 2 && tsx e2e/run-e2e.ts 5",
     "multi": "node scripts/multi-client.mjs",
     "loadtest": "tsx scripts/loadtest.ts",
     "icons": "node scripts/generate-icons.mjs",
@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
-    "playwright": "^1.55.0",
+    "playwright": "1.63.0",
     "tsx": "^4.20.0",
     "typescript": "5.9.3",
     "vitest": "^3.2.4"

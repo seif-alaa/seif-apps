@@ -218,7 +218,11 @@ describe('synchronized match', () => {
     const ids = all[0]!.results!.rows.map((r) => r.id);
     expect(ids).toHaveLength(5);
     for (const c of all) expect(c.results!.rows.map((r) => r.id)).toEqual(ids);
-    for (const c of all) expect(c.players.size).toBe(5);
+    for (const c of all) {
+      expect(c.players.size).toBe(5);
+      // Live ranks every client holds are a consistent permutation.
+      expect(new Set([...c.players.values()].map((p) => p.rank))).toEqual(new Set([1, 2, 3, 4, 5]));
+    }
     // Every board each client holds for an opponent matches the authoritative state.
     const room = [...server!.rooms.values()][0]!;
     for (const c of all) {
@@ -302,7 +306,7 @@ describe('connections', () => {
     const url = await setup();
     const c = await mk(url);
     const results = await Promise.all(Array.from({ length: 80 }, (_, i) => c.request('time:ping', { t: i })));
-    const limited = results.filter((r) => (r as { ok?: boolean }).ok === false);
+    const limited = results.filter((r: unknown) => (r as { ok?: boolean }).ok === false);
     expect(limited.length).toBeGreaterThan(0);
     expect(c.socket.connected).toBe(true);
   });

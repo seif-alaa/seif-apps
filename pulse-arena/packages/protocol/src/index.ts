@@ -202,6 +202,10 @@ export interface ClientToServer {
   'game:sync': (payload: object, ack: (r: Ack<{ sync: MatchSyncPayload | null }>) => void) => void;
 }
 
+/** Ack payload type for a request-style client event. */
+export type AckOf<E extends keyof ClientToServer> = ClientToServer[E] extends (p: never, ack: (r: infer R) => void) => void ? R : never;
+export type PayloadOf<E extends keyof ClientToServer> = Parameters<ClientToServer[E]>[0];
+
 /** Server to client events. */
 export interface ServerToClient {
   session: (info: SessionInfo & { protocol: number }) => void;

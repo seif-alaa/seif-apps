@@ -1,6 +1,8 @@
 import { io as connectClient, type Socket } from 'socket.io-client';
 import { chooseMove, decodeBoard, type PlayerState, createPlayerState } from '@pulse/engine';
 import type {
+  AckOf,
+  PayloadOf,
   ClientToServer,
   MatchResults,
   MatchStartPayload,
@@ -85,7 +87,7 @@ export class TestClient {
     return this.ready;
   }
 
-  request<E extends keyof ClientToServer>(event: E, payload: Parameters<ClientToServer[E]>[0]): Promise<Parameters<Parameters<ClientToServer[E]>[1]>[0]> {
+  request<E extends keyof ClientToServer>(event: E, payload: PayloadOf<E>): Promise<AckOf<E>> {
     return new Promise((resolve) => {
       (this.socket.emit as (e: string, p: unknown, cb: (r: unknown) => void) => void)(event, payload, (r) => resolve(r as never));
     });

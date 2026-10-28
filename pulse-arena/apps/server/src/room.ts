@@ -266,13 +266,13 @@ export class Room {
 
   private afterEvents(byPlayer: Map<string, PlayerEvent[]>): void {
     if (!this.match) return;
+    // Ranks first, so every broadcast below carries the current standings.
+    const rankChanged = byPlayer.size > 0 ? this.match.refreshRanks() : [];
     for (const [pid, events] of byPlayer) {
       this.sendSelf(pid, events, undefined);
       this.broadcastPlayer(pid);
     }
-    if (byPlayer.size > 0) {
-      for (const pid of this.match.refreshRanks()) if (!byPlayer.has(pid)) this.broadcastPlayer(pid);
-    }
+    for (const pid of rankChanged) if (!byPlayer.has(pid)) this.broadcastPlayer(pid);
     this.maybeFinish();
   }
 
