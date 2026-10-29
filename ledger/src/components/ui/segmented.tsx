@@ -6,38 +6,35 @@ import { haptic } from "@/lib/haptics";
 interface Props<T extends string> {
   value: T;
   onChange: (v: T) => void;
-  options: { value: T; label: React.ReactNode; activeClass?: string }[];
+  options: { value: T; label: React.ReactNode; disabled?: boolean }[];
   className?: string;
+  size?: "sm" | "md";
 }
 
-/** iOS-style segmented control with a sliding spring pill. */
-export function Segmented<T extends string>({ value, onChange, options, className }: Props<T>) {
+export function Segmented<T extends string>({ value, onChange, options, className, size = "md" }: Props<T>) {
   const id = useId();
   return (
-    <div className={cn("relative flex rounded-2xl bg-muted p-1", className)} role="tablist">
+    <div className={cn("relative flex rounded bg-sunken p-0.5", className)} role="radiogroup">
       {options.map((o) => {
         const active = o.value === value;
         return (
           <button
             key={o.value}
-            role="tab"
-            aria-selected={active}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            disabled={o.disabled}
             onClick={() => {
               if (!active) haptic("light");
               onChange(o.value);
             }}
             className={cn(
-              "relative z-10 flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
-              active ? o.activeClass ?? "text-foreground" : "text-muted-foreground",
+              "relative z-10 flex-1 rounded-sm px-2 font-medium transition-colors disabled:opacity-35",
+              size === "sm" ? "h-8 text-sm" : "h-9 text-sm",
+              active ? "text-ink" : "text-ink-3",
             )}
           >
-            {active && (
-              <motion.span
-                layoutId={`seg-${id}`}
-                className="absolute inset-0 -z-10 rounded-xl bg-card shadow-soft dark:bg-input"
-                transition={{ type: "spring", stiffness: 500, damping: 38 }}
-              />
-            )}
+            {active && <motion.span layoutId={`seg-${id}`} className="absolute inset-0 -z-10 rounded-sm bg-raised shadow-[0_1px_2px_hsl(var(--shadow)/0.12)] ring-1 ring-rule" transition={{ type: "spring", stiffness: 600, damping: 45 }} />}
             {o.label}
           </button>
         );

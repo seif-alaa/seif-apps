@@ -1,154 +1,234 @@
-import { addDays, startOfDay, subMonths, startOfMonth } from "date-fns";
-import { db, uid, type Account, type Budget, type Category, type Transaction } from "./db";
+import { addDays, startOfDay, startOfMonth, subMonths } from "date-fns";
+import {
+  db,
+  uid,
+  upgradeV1Account,
+  upgradeV1Category,
+  upgradeV1Transaction,
+  type Account,
+  type Budget,
+  type Category,
+  type MerchantMemory,
+  type Reconciliation,
+  type SourceConnection,
+  type Transaction,
+} from "./db";
+import { buildDefaultCategories, ensureCategories } from "./defaults";
+import { ingest } from "@/engine/pipeline";
+import { parseAlert } from "@/engine/sms";
+import { merchantKey, merchantLabel } from "@/engine/merchants";
+import type { Direction, TxnKind } from "@/engine/model";
 
-type CatSeed = Omit<Category, "id" | "createdAt">;
+const ALL = () => [db.accounts, db.categories, db.transactions, db.budgets, db.events, db.merchants, db.reconciliations, db.sources];
 
-export const DEFAULT_CATEGORIES: CatSeed[] = [
-  { name: "Groceries", emoji: "🥑", kind: "expense", slot: 3 },
-  { name: "Dining out", emoji: "🍜", kind: "expense", slot: 2 },
-  { name: "Coffee", emoji: "☕", kind: "expense", slot: 4 },
-  { name: "Transport", emoji: "🚇", kind: "expense", slot: 1 },
-  { name: "Home & bills", emoji: "🏡", kind: "expense", slot: 7 },
-  { name: "Shopping", emoji: "🛍️", kind: "expense", slot: 5 },
-  { name: "Fun", emoji: "🎟️", kind: "expense", slot: 8 },
-  { name: "Health", emoji: "🌿", kind: "expense", slot: 6 },
-  { name: "Salary", emoji: "💼", kind: "income", slot: 3 },
-  { name: "Side hustle", emoji: "✨", kind: "income", slot: 4 },
-  { name: "Gifts", emoji: "🎁", kind: "income", slot: 5 },
-];
-
-export const DEFAULT_ACCOUNTS: Omit<Account, "id" | "createdAt">[] = [
-  { name: "Everyday", type: "checking", emoji: "💳", startingBalance: 0 },
-];
-
-/** Make sure a brand-new device has categories and at least one account. */
+/** New device: built-in categories and a cash wallet. */
 export async function ensureBasics() {
-  await db.transaction("rw", db.categories, db.accounts, async () => {
-    if ((await db.categories.count()) === 0) {
-      const now = Date.now();
-      await db.categories.bulkAdd(DEFAULT_CATEGORIES.map((c, i) => ({ ...c, id: uid(), createdAt: now + i })));
-    }
-    if ((await db.accounts.count()) === 0) {
-      await db.accounts.bulkAdd(DEFAULT_ACCOUNTS.map((a) => ({ ...a, id: uid(), createdAt: Date.now() })));
-    }
-  });
-}
-
-// Deterministic PRNG so sample data looks the same on every device.
-function rng(seed: number) {
-  return () => {
-    seed = (seed * 1664525 + 1013904223) % 4294967296;
-    return seed / 4294967296;
-  };
-}
-
-/** Replace everything with ~4 months of believable sample data. */
-export async function loadSampleData() {
-  const rand = rng(42);
-  const between = (min: number, max: number) => Math.round((min + rand() * (max - min)) * 100);
-  const now = Date.now();
-
-  const cats: Category[] = DEFAULT_CATEGORIES.map((c, i) => ({ ...c, id: uid(), createdAt: now + i }));
-  const byName = Object.fromEntries(cats.map((c) => [c.name, c]));
-  const accounts: Account[] = [
-    { id: uid(), name: "Everyday", type: "checking", emoji: "💳", startingBalance: 184000, createdAt: now },
-    { id: uid(), name: "Rainy day", type: "savings", emoji: "🌧️", startingBalance: 620000, createdAt: now + 1 },
-    { id: uid(), name: "Wallet", type: "cash", emoji: "👛", startingBalance: 8000, createdAt: now + 2 },
-  ];
-  const [everyday, , wallet] = accounts;
-
-  const txns: Transaction[] = [];
-  const push = (cat: string, amount: number, date: Date, note = "", account = everyday) =>
-    txns.push({
-      id: uid(),
-      type: byName[cat].kind,
-      amount,
-      categoryId: byName[cat].id,
-      accountId: account.id,
-      note,
-      date: startOfDay(date).getTime(),
-      createdAt: date.getTime(),
-    });
-
-  const today = startOfDay(new Date());
-  const start = startOfMonth(subMonths(today, 4));
-  for (let d = start; d <= today; d = addDays(d, 1)) {
-    const dom = d.getDate();
-    const dow = d.getDay();
-    if (dom === 1) push("Salary", 520000, d, "Monthly paycheck");
-    if (dom === 1) push("Home & bills", 165000, d, "Rent");
-    if (dom === 12) push("Home & bills", between(70, 110), d, "Electricity & internet");
-    if (dom === 15 && rand() > 0.3) push("Side hustle", between(180, 420), d, "Design gig");
-    if (dow === 6 || (dow === 3 && rand() > 0.4)) push("Groceries", between(28, 95), d, rand() > 0.5 ? "Farmers market" : "Weekly shop");
-    if (dow >= 1 && dow <= 5 && rand() > 0.35) push("Coffee", between(3.5, 6.5), d, "Flat white", wallet);
-    if (dow >= 1 && dow <= 5 && rand() > 0.55) push("Transport", between(2.5, 14), d, rand() > 0.7 ? "Taxi home" : "Metro");
-    if ((dow === 5 || dow === 6) && rand() > 0.35) push("Dining out", between(18, 72), d, ["Ramen night", "Brunch", "Tacos with Sam", "Pizza"][Math.floor(rand() * 4)]);
-    if (rand() > 0.9) push("Shopping", between(15, 120), d, ["New sneakers", "Books", "Plant pot", "Headphones case"][Math.floor(rand() * 4)]);
-    if (rand() > 0.93) push("Fun", between(12, 60), d, ["Cinema", "Concert", "Bowling", "Museum"][Math.floor(rand() * 4)]);
-    if (rand() > 0.96) push("Health", between(10, 55), d, "Pharmacy");
-    if (dom === 20 && rand() > 0.6) push("Gifts", between(40, 150), d, "Birthday money");
+  await ensureCategories();
+  if ((await db.accounts.count()) === 0) {
+    await db.accounts.add({ id: uid(), name: "Cash", kind: "cash", institution: "cash", last4: null, currency: "EGP", startingBalance: 0, archived: false, createdAt: Date.now() });
   }
-
-  const budgetsFor: Record<string, number> = {
-    Groceries: 42000,
-    "Dining out": 22000,
-    Coffee: 7000,
-    Transport: 9000,
-    Shopping: 15000,
-    Fun: 10000,
-  };
-  const budgets: Budget[] = Object.entries(budgetsFor).map(([name, amount]) => ({
-    categoryId: byName[name].id,
-    amount,
-    updatedAt: now,
-  }));
-
-  await wipeAll();
-  await db.transaction("rw", [db.categories, db.accounts, db.transactions, db.budgets], async () => {
-    await db.categories.bulkAdd(cats);
-    await db.accounts.bulkAdd(accounts);
-    await db.transactions.bulkAdd(txns);
-    await db.budgets.bulkAdd(budgets);
-  });
 }
 
 export async function wipeAll() {
-  await db.transaction("rw", [db.categories, db.accounts, db.transactions, db.budgets], async () => {
-    await Promise.all([db.categories.clear(), db.accounts.clear(), db.transactions.clear(), db.budgets.clear()]);
+  await db.transaction("rw", ALL(), async () => {
+    await Promise.all(ALL().map((t) => t.clear()));
   });
 }
 
-export interface Backup {
+/** Remove everything that isn't the user's real data (sample mode, simulator runs). */
+export async function clearNonReal() {
+  const { usePrefs } = await import("@/store/ui");
+  if (usePrefs.getState().sampleMode) {
+    await wipeAll();
+    await ensureBasics();
+    usePrefs.getState().setPrefs({ sampleMode: false });
+    return;
+  }
+  await db.transaction("rw", ALL(), async () => {
+    const fake = await db.transactions.filter((t) => t.origin !== "real").toArray();
+    await db.transactions.bulkDelete(fake.map((t) => t.id));
+    const fakeEvents = await db.events.filter((e) => e.origin !== "real").toArray();
+    await db.events.bulkDelete(fakeEvents.map((e) => e.id));
+    const fakeAccounts = await db.accounts.filter((a) => !!a.origin && a.origin !== "real").toArray();
+    await db.accounts.bulkDelete(fakeAccounts.map((a) => a.id));
+    await db.sources.where("kind").equals("simulator").delete();
+  });
+}
+
+/**
+ * Three months of clearly-labelled sample data, built the way real data is:
+ * history the user "confirmed", merchant memory learned from it, and a few
+ * fresh alerts run through the real pipeline so the review queue has work.
+ */
+export async function loadSampleData() {
+  await wipeAll();
+  const now = Date.now();
+  const cats = buildDefaultCategories(now);
+  const byKey = (k: string) => cats.find((c) => c.key === k)!.id;
+  const acc = (name: string, institution: string, kind: Account["kind"], last4: string | null, startingBalance: number, i: number): Account => ({
+    id: uid(), name, institution, kind, last4, currency: "EGP", startingBalance, archived: false, createdAt: now + i, origin: "sample",
+  });
+  const cib = acc("CIB", "cib", "bank", "4821", 1_850_000, 0);
+  const telda = acc("Telda", "telda", "card", "3307", 200_000, 1);
+  const vf = acc("Vodafone Cash", "vodafonecash", "wallet", null, 60_000, 2);
+  const cash = acc("Cash", "cash", "cash", null, 120_000, 3);
+
+  let seed = 7;
+  const rand = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  const between = (a: number, b: number) => Math.round((a + rand() * (b - a)) * 100);
+  const txns: Transaction[] = [];
+  const add = (o: { amount: number; dir: Direction; kind: TxnKind; cat?: string; account: Account; at: number; merchant?: string; counter?: Account | null; group?: string; source?: Transaction["source"]; note?: string }) => {
+    const t: Transaction = {
+      id: uid(),
+      amount: o.amount,
+      currency: "EGP",
+      direction: o.dir,
+      kind: o.kind,
+      accountId: o.account.id,
+      counterAccountId: o.counter?.id ?? null,
+      transferGroupId: o.group ?? null,
+      refundOf: null,
+      categoryId: o.cat ? byKey(o.cat) : null,
+      merchant: merchantLabel(o.merchant) ?? null,
+      merchantKey: merchantKey(o.merchant),
+      note: o.note ?? "",
+      occurredAt: o.at,
+      date: startOfDay(o.at).getTime(),
+      detectedAt: o.at + 60_000,
+      source: o.source ?? "sms_paste",
+      sourceEventIds: [],
+      reference: null,
+      posting: "posted",
+      classification: "classified",
+      method: "user",
+      confidence: 1,
+      review: "confirmed",
+      reviewReason: null,
+      origin: "sample",
+      createdAt: o.at,
+      updatedAt: o.at,
+    };
+    txns.push(t);
+    return t;
+  };
+  const transfer = (amount: number, fee: number, from: Account, to: Account, at: number, merchant?: string) => {
+    const g = uid();
+    add({ amount: amount + fee, dir: "out", kind: "transfer", account: from, counter: to, group: g, at, merchant });
+    add({ amount, dir: "in", kind: "transfer", account: to, counter: from, group: g, at: at + 90_000, merchant, source: to.kind === "cash" ? "derived" : "sms_paste" });
+  };
+
+  const today = startOfDay(new Date());
+  const start = startOfMonth(subMonths(today, 3));
+  for (let d = start; d < addDays(today, -2); d = addDays(d, 1)) {
+    const t = d.getTime();
+    const h = (hh: number) => t + hh * 3_600_000 + Math.floor(rand() * 50) * 60_000;
+    const dom = d.getDate();
+    const dow = d.getDay();
+    if (dom === 1) add({ amount: 3_200_000, dir: "in", kind: "income", cat: "salary", account: cib, at: h(9), merchant: "ACME SOFTWARE PAYROLL" });
+    if (dom === 2) transfer(1_500_000, 200, cib, telda, h(10), "InstaPay");
+    if (dom === 3) add({ amount: 950_000, dir: "out", kind: "expense", cat: "bills", account: cib, at: h(11), note: "Rent", merchant: "Rent" , source: "manual" });
+    if (dom === 5) add({ amount: 49_900, dir: "out", kind: "expense", cat: "bills", account: vf, at: h(12), merchant: "Vodafone" });
+    if (dom === 14) add({ amount: 19_900, dir: "out", kind: "expense", cat: "entertainment", account: telda, at: h(20), merchant: "NETFLIX.COM" });
+    if (dom === 18 && rand() > 0.4) add({ amount: between(3000, 6500), dir: "in", kind: "income", cat: "freelance", account: cib, at: h(15), merchant: "UPWORK" });
+    if (dom === 10 || dom === 24) transfer(200_000, 0, cib, cash, h(18), "ATM");
+    if (dow === 5 || (dow === 2 && rand() > 0.5)) add({ amount: between(350, 1400), dir: "out", kind: "expense", cat: "groceries", account: telda, at: h(17), merchant: rand() > 0.5 ? "CARREFOUR MAADI" : "SEOUDI MARKET" });
+    if (dow !== 5 && rand() > 0.45) add({ amount: between(65, 120), dir: "out", kind: "expense", cat: "coffee", account: telda, at: h(9), merchant: "BEANOS ZAMALEK" });
+    if (rand() > 0.5) add({ amount: between(45, 220), dir: "out", kind: "expense", cat: "transport", account: telda, at: h(8), merchant: rand() > 0.3 ? "UBER TRIP" : "CAREEM" });
+    if ((dow === 4 || dow === 5) && rand() > 0.4) add({ amount: between(220, 780), dir: "out", kind: "expense", cat: "dining", account: telda, at: h(21), merchant: "TALABAT" });
+    if (rand() > 0.8) add({ amount: between(15, 80), dir: "out", kind: "expense", cat: "dining", account: cash, at: h(14), merchant: "Koshary Abou Tarek", source: "manual" });
+    if (rand() > 0.94) add({ amount: between(250, 2200), dir: "out", kind: "expense", cat: "shopping", account: telda, at: h(19), merchant: rand() > 0.5 ? "AMAZON.EG" : "NOON.COM" });
+    if (rand() > 0.96) add({ amount: between(120, 600), dir: "out", kind: "expense", cat: "health", account: telda, at: h(13), merchant: "EL EZABY PHARMACY" });
+  }
+
+  // Learned merchant memory = what the user "confirmed" above.
+  const memory = new Map<string, MerchantMemory>();
+  for (const t of txns) {
+    if (!t.merchantKey || t.kind === "transfer") continue;
+    const m = memory.get(t.merchantKey) ?? { merchantKey: t.merchantKey, label: t.merchant ?? t.merchantKey, counts: {}, updatedAt: now };
+    const slot = t.categoryId ?? `kind:${t.kind}`;
+    m.counts[slot] = (m.counts[slot] ?? 0) + 1;
+    memory.set(t.merchantKey, m);
+  }
+
+  const budgets: Budget[] = [
+    ["groceries", 450_000],
+    ["dining", 300_000],
+    ["coffee", 180_000],
+    ["transport", 250_000],
+    ["entertainment", 60_000],
+    ["bills", 1_050_000],
+  ].map(([k, amount]) => ({ categoryId: byKey(k as string), amount: amount as number, updatedAt: now }));
+
+  await db.transaction("rw", ALL(), async () => {
+    await db.categories.bulkAdd(cats);
+    await db.accounts.bulkAdd([cib, telda, vf, cash]);
+    await db.transactions.bulkAdd(txns);
+    await db.merchants.bulkAdd([...memory.values()]);
+    await db.budgets.bulkAdd(budgets);
+  });
+
+  // Fresh alerts through the real pipeline: one auto-filed, three that need the user.
+  const recent: [string, number][] = [
+    ["Telda: You spent EGP 92.00 at BEANOS ZAMALEK with card ending 3307.", 2],
+    ["CIB: Purchase of EGP 640.00 at ZOOBA ZAMALEK on card ****4821.", 1],
+    ["InstaPay: You received EGP 1,500.00 from MARIAM HASSAN to your account ****4821.", 1],
+    ["Telda: You spent EGP 1,180.00 at CARREFOUR MAADI with card ending 3307.", 0],
+  ];
+  for (const [text, daysAgo] of recent) {
+    const at = today.getTime() - daysAgo * 86_400_000 + 13 * 3_600_000;
+    const p = parseAlert(text, at);
+    if (p.ok) await ingest({ sourceKind: "sms_paste", receivedAt: at, parsed: { ...p.fields, occurredAt: at }, rawText: text, origin: "sample" });
+  }
+}
+
+export interface BackupV2 {
   app: "ledger";
-  version: 1;
+  version: 2;
   exportedAt: string;
   accounts: Account[];
   categories: Category[];
   transactions: Transaction[];
   budgets: Budget[];
+  merchants: MerchantMemory[];
+  reconciliations: Reconciliation[];
+  sources: SourceConnection[];
 }
 
-export async function exportData(): Promise<Backup> {
-  const [accounts, categories, transactions, budgets] = await Promise.all([
+/** Export everything except raw source evidence (which may contain message text). */
+export async function exportData(): Promise<BackupV2> {
+  const [accounts, categories, transactions, budgets, merchants, reconciliations, sources] = await Promise.all([
     db.accounts.toArray(),
     db.categories.toArray(),
     db.transactions.toArray(),
     db.budgets.toArray(),
+    db.merchants.toArray(),
+    db.reconciliations.toArray(),
+    db.sources.toArray(),
   ]);
-  return { app: "ledger", version: 1, exportedAt: new Date().toISOString(), accounts, categories, transactions, budgets };
+  return { app: "ledger", version: 2, exportedAt: new Date().toISOString(), accounts, categories, transactions, budgets, merchants, reconciliations, sources };
 }
 
+/** Restores v2 backups, and upgrades v1 backups on the way in. */
 export async function importData(data: unknown) {
-  const b = data as Partial<Backup>;
-  if (!b || b.app !== "ledger" || !Array.isArray(b.transactions) || !Array.isArray(b.categories) || !Array.isArray(b.accounts)) {
-    throw new Error("That file doesn't look like a Ledger backup.");
+  const b = data as Omit<Partial<BackupV2>, "version"> & { version?: number };
+  if (!b || b.app !== "ledger" || !Array.isArray(b.transactions) || !Array.isArray(b.categories) || !Array.isArray(b.accounts)) throw new Error("not_a_backup");
+  let { accounts, categories, transactions } = b as BackupV2;
+  if (b.version === 1) {
+    const { usePrefs } = await import("@/store/ui");
+    const currency = usePrefs.getState().currency;
+    accounts = accounts.map((a) => upgradeV1Account({ ...a } as unknown as Record<string, unknown>, currency) as unknown as Account);
+    categories = categories.map((c) => upgradeV1Category({ ...c } as unknown as Record<string, unknown>) as unknown as Category);
+    transactions = transactions.map((t) => upgradeV1Transaction({ ...t } as unknown as Record<string, unknown>, currency) as unknown as Transaction);
   }
   await wipeAll();
-  await db.transaction("rw", [db.categories, db.accounts, db.transactions, db.budgets], async () => {
-    await db.categories.bulkAdd(b.categories!);
-    await db.accounts.bulkAdd(b.accounts!);
-    await db.transactions.bulkAdd(b.transactions!);
+  await db.transaction("rw", ALL(), async () => {
+    await db.categories.bulkAdd(categories);
+    await db.accounts.bulkAdd(accounts);
+    await db.transactions.bulkAdd(transactions);
     await db.budgets.bulkAdd(b.budgets ?? []);
+    await db.merchants.bulkAdd(b.merchants ?? []);
+    await db.reconciliations.bulkAdd(b.reconciliations ?? []);
+    await db.sources.bulkAdd(b.sources ?? []);
   });
+  await ensureCategories();
 }
-

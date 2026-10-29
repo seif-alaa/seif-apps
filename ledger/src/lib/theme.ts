@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { usePrefs } from "@/store/ui";
 
-const THEME_COLORS = { dark: "#0b0d14", light: "#faf8f4" };
+const THEME_COLORS = { dark: "#131211", light: "#f7f5f0" };
 
-/** Applies the theme preference to <html> and keeps the iOS status bar colour in sync. */
-export function useApplyTheme() {
+/** Applies theme, language and direction to <html>, and keeps the status bar colour in sync. */
+export function useApplyAppearance() {
   const pref = usePrefs((s) => s.theme);
+  const lang = usePrefs((s) => s.language);
   const [systemDark, setSystemDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   useEffect(() => {
@@ -22,6 +23,11 @@ export function useApplyTheme() {
     root.classList.toggle("dark", resolved === "dark");
     document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute("content", THEME_COLORS[resolved]));
   }, [resolved]);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  }, [lang]);
 
   return resolved;
 }

@@ -1,37 +1,28 @@
 import * as React from "react";
-import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
+import * as A from "@radix-ui/react-alert-dialog";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "./button";
 
-export const AlertDialog = AlertDialogPrimitive.Root;
-export const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
+export const AlertDialog = A.Root;
+export const AlertDialogTrigger = A.Trigger;
 
-export function AlertDialogContent({ className, children, ...props }: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>) {
+export function AlertDialogContent({ className, children, ...props }: React.ComponentPropsWithoutRef<typeof A.Content>) {
   return (
-    <AlertDialogPrimitive.Portal>
-      <AlertDialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
-      <AlertDialogPrimitive.Content
+    <A.Portal>
+      <A.Overlay className="fixed inset-0 z-50 bg-black/45 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+      <A.Content
         className={cn(
-          "fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 gap-4 rounded-3xl border border-border bg-popover p-6 shadow-lift data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
+          "fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 gap-3 rounded-lg bg-raised p-5 shadow-pop data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98]",
           className,
         )}
         {...props}
       >
         {children}
-      </AlertDialogPrimitive.Content>
-    </AlertDialogPrimitive.Portal>
+      </A.Content>
+    </A.Portal>
   );
 }
-
-export const AlertDialogTitle = ({ className, ...p }: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title>) => (
-  <AlertDialogPrimitive.Title className={cn("text-lg font-semibold", className)} {...p} />
-);
-export const AlertDialogDescription = ({ className, ...p }: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Description>) => (
-  <AlertDialogPrimitive.Description className={cn("text-sm leading-relaxed text-muted-foreground", className)} {...p} />
-);
-export const AlertDialogAction = ({ className, ...p }: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>) => (
-  <AlertDialogPrimitive.Action className={cn(buttonVariants({ variant: "destructive" }), className)} {...p} />
-);
-export const AlertDialogCancel = ({ className, ...p }: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Cancel>) => (
-  <AlertDialogPrimitive.Cancel className={cn(buttonVariants({ variant: "secondary" }), className)} {...p} />
-);
+export const AlertDialogTitle = ({ className, ...p }: React.ComponentPropsWithoutRef<typeof A.Title>) => <A.Title className={cn("text-md font-semibold", className)} {...p} />;
+export const AlertDialogDescription = ({ className, ...p }: React.ComponentPropsWithoutRef<typeof A.Description>) => <A.Description className={cn("text-sm leading-relaxed text-ink-2", className)} {...p} />;
+export const AlertDialogAction = ({ className, ...p }: React.ComponentPropsWithoutRef<typeof A.Action>) => <A.Action className={cn(buttonVariants({ variant: "danger" }), className)} {...p} />;
+export const AlertDialogCancel = ({ className, ...p }: React.ComponentPropsWithoutRef<typeof A.Cancel>) => <A.Cancel className={cn(buttonVariants({ variant: "secondary" }), className)} {...p} />;

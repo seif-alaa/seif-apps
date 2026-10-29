@@ -11,17 +11,19 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg", "apple-touch-icon.png"],
+      includeAssets: ["favicon.svg", "apple-touch-icon.png", "sw-actions.js"],
       manifest: {
         name: "Ledger",
         short_name: "Ledger",
-        description: "A warm, private, offline-first money companion.",
+        description: "Private, offline-first money tracking that files your transactions for you.",
         start_url: "./",
         scope: "./",
         display: "standalone",
         orientation: "portrait",
-        background_color: "#0b0d14",
-        theme_color: "#0b0d14",
+        background_color: "#131211",
+        theme_color: "#131211",
+        // Android: "Share → Ledger" from Messages delivers alert text to ?text=…
+        share_target: { action: "./", method: "GET", params: { title: "title", text: "text" } },
         icons: [
           { src: "pwa-192x192.png", sizes: "192x192", type: "image/png" },
           { src: "pwa-512x512.png", sizes: "512x512", type: "image/png" },
@@ -31,6 +33,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
         navigateFallback: "index.html",
+        importScripts: ["sw-actions.js"],
       },
     }),
   ],

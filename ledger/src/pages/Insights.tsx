@@ -1,170 +1,208 @@
 import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { addMonths, eachDayOfInterval, endOfMonth, format, isSameMonth, isAfter, parse, startOfMonth, subMonths } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Page, Reveal } from "@/components/Page";
-import { PageHeader } from "@/components/PageHeader";
-import { Card, CardTitle } from "@/components/ui/card";
+import { addMonths, isSameMonth, startOfMonth, subMonths } from "date-fns";
+import { ChartColumn, ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { Page, TopBar, Section, Meter, Empty } from "@/components/layout";
+import { Money } from "@/components/Money";
+import { CategoryGlyph, Glyph } from "@/components/icons";
+import { DailyBars } from "@/components/charts/DailyBars";
+import { InOutBars } from "@/components/charts/InOutBars";
 import { Button } from "@/components/ui/button";
-import { Money, CountUp } from "@/components/AnimatedNumber";
-import { MonthlyBars } from "@/components/charts/MonthlyBars";
-import { SpendingTrend } from "@/components/charts/SpendingTrend";
-import { CategoryBreakdown } from "@/components/charts/CategoryBreakdown";
-import { EmptyState } from "@/components/EmptyState";
-import { ChartIllustration } from "@/components/Illustrations";
-import { useBudgets, useCategoryMap, useTransactions } from "@/db/hooks";
-import { dailyCumulative, monthTxns, monthlySeries, spendByCategory, totals } from "@/lib/stats";
-import { useMoney } from "@/lib/format";
-import { usePrefs } from "@/store/ui";
+import { useAccounts, useBudgets, useCategories, useCategoryMap, useTransactions } from "@/db/hooks";
+import { budgetLines, dailySpending, monthSummary, monthlySeries } from "@/engine/ledger";
+import { detectRecurring } from "@/engine/recurring";
+import { useI18n } from "@/i18n";
+import { categoryName } from "@/lib/labels";
 import { cn } from "@/lib/utils";
-
-interface Nugget {
-  emoji: string;
-  text: string;
-}
+import { useSheets } from "@/store/ui";
+import { ReportSheet } from "@/components/ReportSheet";
+import { AskLedger } from "@/components/AskLedger";
+import { Percent } from "lucide-react";
 
 export default function Insights() {
+  const { t, date, currency, pct, day } = useI18n();
   const txns = useTransactions();
-  const cats = useCategoryMap();
+  const accounts = useAccounts();
   const budgets = useBudgets();
-  const money = useMoney();
-  const hidden = usePrefs((s) => s.hideAmounts);
+  const categories = useCategories();
+  const cats = useCategoryMap();
+  const { openReview } = useSheets();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
-  const [dir, setDir] = useState(0);
-
+  const [report, setReport] = useState(false);
   const all = txns ?? [];
-  const cur = useMemo(() => monthTxns(all, month), [all, month]);
-  const prev = useMemo(() => monthTxns(all, subMonths(month, 1)), [all, month]);
-  const t = totals(cur);
-  const p = totals(prev);
-  const rate = t.income ? Math.max(0, t.net / t.income) : 0;
-  const byCat = useMemo(() => spendByCategory(cur, cats), [cur, cats]);
-  const series = useMemo(() => monthlySeries(all, 6, month), [all, month]);
-  const budgetTotal = budgets.reduce((s, b) => s + b.amount, 0);
-  const trend = useMemo(() => dailyCumulative(all, month, budgetTotal), [all, month, budgetTotal]);
-  const isCurrent = isSameMonth(month, new Date());
+  const current = isSameMonth(month, new Date());
 
-  const nuggets = useMemo<Nugget[]>(() => {
-    const m = (n: number) => (hidden ? "••••" : money(n, { cents: false }));
-    const out: Nugget[] = [];
-    if (p.expense > 0 && t.expense > 0) {
-      const diff = (t.expense - p.expense) / p.expense;
-      if (diff < -0.03) out.push({ emoji: "📉", text: `You've spent ${Math.round(-diff * 100)}% less than ${format(subMonths(month, 1), "MMMM")}${isCurrent ? " so far" : ""}. Nicely done.` });
-      else if (diff > 0.03 && !isCurrent) out.push({ emoji: "📈", text: `Spending was ${Math.round(diff * 100)}% higher than ${format(subMonths(month, 1), "MMMM")}.` });
-    }
-    if (byCat[0]) out.push({ emoji: byCat[0].category.emoji, text: `${byCat[0].category.name} led the way at ${Math.round(byCat[0].share * 100)}% of spending (${m(byCat[0].amount)}).` });
-    const biggest = cur.filter((x) => x.type === "expense").sort((a, b) => b.amount - a.amount)[0];
-    if (biggest) out.push({ emoji: "🧾", text: `Biggest single spend: ${m(biggest.amount)}${biggest.note ? ` on “${biggest.note}”` : ""}.` });
-    const end = isCurrent ? new Date() : endOfMonth(month);
-    const days = eachDayOfInterval({ start: month, end });
-    const spendDays = new Set(cur.filter((x) => x.type === "expense").map((x) => x.date));
-    const noSpend = days.filter((d) => !spendDays.has(d.getTime())).length;
-    if (noSpend > 0 && cur.length) out.push({ emoji: "🧘", text: `${noSpend} no-spend ${noSpend === 1 ? "day" : "days"} this month. Your wallet says thanks.` });
-    if (t.net > 0) out.push({ emoji: "🌱", text: `You kept ${m(t.net)} — that's ${Math.round(rate * 100)}% of what came in.` });
-    return out;
-  }, [p.expense, t.expense, t.net, byCat, cur, month, isCurrent, rate, money, hidden]);
-
-  const go = (n: number) => {
-    const next = addMonths(month, n);
-    if (isAfter(next, new Date())) return;
-    setDir(n);
-    setMonth(next);
-  };
+  const s = useMemo(() => monthSummary(all, month, currency, accounts), [all, month, currency, accounts]);
+  const prev = useMemo(() => monthSummary(all, subMonths(month, 1), currency, accounts), [all, month, currency, accounts]);
+  const daily = useMemo(() => dailySpending(all, month, currency), [all, month, currency]);
+  const series = useMemo(() => monthlySeries(all, 6, current ? new Date() : addMonths(month, 0), currency), [all, month, current, currency]);
+  const lines = useMemo(() => budgetLines(budgets, categories, all, month, currency), [budgets, categories, all, month, currency]);
+  const recurring = useMemo(() => detectRecurring(all), [all]);
+  const byCat = useMemo(() => {
+    const total = [...s.byCategory.values()].reduce((a, b) => a + b, 0);
+    return [...s.byCategory.entries()]
+      .map(([id, amount]) => ({ id, amount, share: total ? amount / total : 0, change: prev.byCategory.get(id) ? (amount - prev.byCategory.get(id)!) / prev.byCategory.get(id)! : null }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [s, prev]);
+  const max = byCat[0]?.amount ?? 1;
+  const delta = (a: number, b: number) => (b ? (a - b) / b : null);
 
   if (txns && all.length === 0) {
     return (
       <Page>
-        <PageHeader title="Insights" />
-        <EmptyState art={<ChartIllustration />} title="Charts are hungry" body="Log a few transactions and this page fills up with trends, patterns and little wins worth celebrating." />
+        <TopBar title={t("nav.insights")} />
+        <Empty icon={<ChartColumn />} title={t("insights.emptyTitle")} body={t("insights.emptyBody")} />
       </Page>
     );
   }
 
   return (
     <Page>
-      <PageHeader title="Insights" />
-
-      <div className="flex items-center justify-between px-5 pb-3">
-        <Button variant="secondary" size="icon-sm" onClick={() => go(-1)} aria-label="Previous month">
-          <ChevronLeft />
+      <TopBar
+        title={t("nav.insights")}
+        actions={
+          <Button variant="ghost" size="icon" aria-label={t("report.title")} onClick={() => setReport(true)}>
+            <FileText />
+          </Button>
+        }
+      />
+      <div className="flex items-center justify-between px-3">
+        <Button variant="ghost" size="icon-sm" onClick={() => setMonth((m) => addMonths(m, -1))} aria-label={t("common.previous")}>
+          <ChevronLeft className="rtl:rotate-180" />
         </Button>
-        <div className="relative h-7 flex-1 overflow-hidden text-center">
-          <AnimatePresence initial={false} custom={dir} mode="popLayout">
-            <motion.div
-              key={month.toISOString()}
-              custom={dir}
-              initial={{ x: dir * 40, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: dir * -40, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 34 }}
-              className="text-lg font-semibold"
-            >
-              {format(month, "MMMM yyyy")}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-        <Button variant="secondary" size="icon-sm" onClick={() => go(1)} disabled={isCurrent} aria-label="Next month">
-          <ChevronRight />
+        <span className="text-sm font-medium">{date(month, "MMMM yyyy")}</span>
+        <Button variant="ghost" size="icon-sm" disabled={current} onClick={() => setMonth((m) => addMonths(m, 1))} aria-label={t("common.next")}>
+          <ChevronRight className="rtl:rotate-180" />
         </Button>
       </div>
 
-      <Reveal i={0} className="grid grid-cols-2 gap-3 px-5">
-        {[
-          { label: "Money in", value: t.income, cls: "text-emerald" },
-          { label: "Money out", value: t.expense, cls: "text-coral" },
-          { label: "Kept", value: t.net, cls: t.net >= 0 ? "text-foreground" : "text-coral" },
-        ].map((s) => (
-          <div key={s.label} className="surface-card p-4">
-            <div className="text-[13px] text-muted-foreground">{s.label}</div>
-            <Money key={month.toISOString()} value={s.value} cents={false} className={cn("mt-1 block text-xl font-semibold", s.cls)} />
-          </div>
-        ))}
-        <div className="surface-card p-4">
-          <div className="text-[13px] text-muted-foreground">Savings rate</div>
-          <CountUp key={month.toISOString()} value={Math.round(rate * 100)} suffix="%" className="mt-1 block text-xl font-semibold" />
-        </div>
-      </Reveal>
-
-      {nuggets.length > 0 && (
-        <Reveal i={1} className="pt-4">
-          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
-            {nuggets.map((n, i) => (
-              <motion.div
-                key={`${month.toISOString()}-${i}`}
-                initial={{ opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.08 * i, type: "spring", stiffness: 300, damping: 28 }}
-                className="surface-card flex w-[78%] shrink-0 snap-start items-start gap-3 p-4"
-              >
-                <span className="text-2xl">{n.emoji}</span>
-                <p className="text-sm leading-snug">{n.text}</p>
-              </motion.div>
-            ))}
-          </div>
-        </Reveal>
+      <div className="mt-3 grid grid-cols-2 border-y border-rule bg-surface">
+        <Kpi label={t("insights.moneyIn")} change={delta(s.income, prev.income)} goodWhenUp>
+          <Money value={s.income} cents={false} size="lg" tone={s.income ? "pos" : "ink"} />
+        </Kpi>
+        <Kpi label={t("insights.spent")} change={delta(s.spending, prev.spending)} className="border-s">
+          <Money value={s.spending} cents={false} size="lg" />
+        </Kpi>
+        <Kpi label={t("insights.kept")} change={null} className="border-t">
+          <Money value={s.net} cents={false} size="lg" tone={s.net < 0 ? "neg" : "ink"} />
+        </Kpi>
+        <Kpi label={t("insights.savingsRate")} change={null} className="border-s border-t">
+          <span className="fig text-xl">{s.savingsRate === null ? "—" : pct(s.savingsRate)}</span>
+        </Kpi>
+      </div>
+      {(s.unknownOut > 0 || s.unknownIn > 0) && (
+        <button onClick={() => openReview()} className="tap block w-full px-5 py-2.5 text-start text-xs leading-relaxed text-ink-3">
+          {t("insights.quality")}{" "}
+          {s.unknownOut > 0 && (
+            <>
+              <Money value={s.unknownOut} size="sm" cents={false} tone="muted" /> {t("insights.qualityOut")}
+            </>
+          )}
+          {s.unknownOut > 0 && s.unknownIn > 0 && " · "}
+          {s.unknownIn > 0 && (
+            <>
+              <Money value={s.unknownIn} size="sm" cents={false} tone="muted" /> {t("insights.qualityIn")}
+            </>
+          )}{" "}
+          {t("insights.qualitySuffix")} <span className="font-medium text-accent-ink">{t("common.review")}</span>
+        </button>
       )}
 
-      <Reveal i={2} className="px-5 pt-4">
-        <Card>
-          <CardTitle className="mb-3">Last 6 months</CardTitle>
-          <MonthlyBars data={series} activeKey={format(month, "yyyy-MM")} onSelect={(k) => setMonth(startOfMonth(parse(k, "yyyy-MM", new Date())))} />
-        </Card>
-      </Reveal>
+      <Section title={t("insights.byDay")} flush>
+        <div className="px-5">
+          <DailyBars data={daily} />
+          <div className="mt-2 flex justify-between text-xs text-ink-3">
+            <span>{t("insights.avgPerDay")}</span>
+            <Money value={Math.round(s.spending / Math.max(1, daily.filter((d) => d.spending !== null).length))} cents={false} size="sm" tone="muted" />
+          </div>
+        </div>
+      </Section>
 
-      <Reveal i={3} className="px-5 pt-4">
-        <Card>
-          <CardTitle>Spending through the month</CardTitle>
-          <p className="mb-2 text-sm text-muted-foreground">{budgetTotal ? "Dashed line = even pace for your budgets." : "Set budgets to see your pace line."}</p>
-          <SpendingTrend key={month.toISOString()} data={trend} height={170} />
-        </Card>
-      </Reveal>
+      <Section title={t("insights.byCategory")}>
+        {byCat.length === 0 && <p className="px-5 py-6 text-sm text-ink-3">{t("insights.noSpending")}</p>}
+        {byCat.map((c) => {
+          const cat = cats.get(c.id);
+          return (
+            <div key={c.id} className="border-t border-rule px-5 py-3 first:border-t-0">
+              <div className="flex items-center gap-3">
+                {c.id === "_fees" ? <Glyph icon={Percent} size="sm" /> : <CategoryGlyph category={cat} size="sm" />}
+                <span className="flex-1 truncate text-base">{c.id === "_fees" ? t("insights.transferFees") : c.id === "_none" ? t("insights.uncategorised") : categoryName(cat, t)}</span>
+                <span className="fig w-10 text-end text-xs text-ink-3">{pct(c.share)}</span>
+                <Money value={c.amount} cents={false} className="w-24 justify-end font-medium" />
+              </div>
+              <div className="ms-10 mt-2 flex items-center gap-3">
+                <div className="h-1 flex-1 rounded-full bg-rule">
+                  <div className="h-full rounded-full bg-ink" style={{ width: `${(c.amount / max) * 100}%` }} />
+                </div>
+                <span className={cn("fig w-12 text-end text-xs", c.change === null ? "text-ink-4" : c.change > 0.05 ? "text-neg" : c.change < -0.05 ? "text-pos" : "text-ink-3")}>
+                  {c.change === null ? t("insights.new") : `${c.change > 0 ? "+" : ""}${pct(c.change)}`}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+        {byCat.length > 0 && <div className="border-t border-rule px-5 py-2 text-2xs text-ink-4">{t("insights.vsPrevious", { month: date(subMonths(month, 1), "MMMM") })}</div>}
+      </Section>
 
-      <Reveal i={4} className="px-5 pt-4">
-        <Card>
-          <CardTitle className="mb-4">Where it went</CardTitle>
-          {byCat.length ? <CategoryBreakdown key={month.toISOString()} rows={byCat} /> : <p className="py-6 text-center text-sm text-muted-foreground">No spending this month. Wild! 🦄</p>}
-        </Card>
-      </Reveal>
+      <Section title={t("insights.inVsOut")} flush>
+        <div className="px-5">
+          <InOutBars data={series} selected={series.find((x) => isSameMonth(x.month, month))?.key ?? ""} onSelect={(k) => setMonth(startOfMonth(new Date(`${k}-01T00:00:00`)))} />
+        </div>
+      </Section>
+
+      {lines.length > 0 && (
+        <Section title={t("insights.budgetPerformance")}>
+          {lines.map((l) => (
+            <div key={l.category.id} className="flex items-center gap-3 border-t border-rule px-5 py-2.5 first:border-t-0">
+              <span className="w-28 truncate text-sm">{categoryName(l.category, t)}</span>
+              <Meter className="flex-1" value={l.ratio} status={l.status} />
+              <span className={cn("fig w-12 text-end text-xs", l.status === "over" ? "text-neg" : "text-ink-3")}>{pct(l.ratio)}</span>
+            </div>
+          ))}
+        </Section>
+      )}
+
+      <Section title={t("insights.recurring")}>
+        {recurring.length === 0 ? (
+          <p className="px-5 py-4 text-sm text-ink-3">{t("insights.noRecurring")}</p>
+        ) : (
+          recurring.map((r) => (
+            <div key={r.merchantKey} className="flex items-center gap-3 border-t border-rule px-5 py-3 first:border-t-0">
+              <CategoryGlyph category={r.categoryId ? cats.get(r.categoryId) : null} size="sm" />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-base">{r.label}</div>
+                <div className="text-xs text-ink-3">
+                  {t(`cadence.${r.cadence}`)} · {t("insights.nextAround", { date: day(r.nextExpected) })}
+                </div>
+              </div>
+              <Money value={r.typicalAmount} cents={false} className="font-medium" />
+            </div>
+          ))
+        )}
+      </Section>
+
+      <Section title={t("ask.title")} flush>
+        <AskLedger />
+      </Section>
+
+      <ReportSheet open={report} onOpenChange={setReport} month={month} />
     </Page>
+  );
+}
+
+function Kpi({ label, change, children, className, goodWhenUp }: { label: string; change: number | null; children: React.ReactNode; className?: string; goodWhenUp?: boolean }) {
+  const { pct, t } = useI18n();
+  const up = change !== null && change > 0.005;
+  const down = change !== null && change < -0.005;
+  const good = goodWhenUp ? up : down;
+  return (
+    <div className={cn("border-rule px-5 py-3.5", className)}>
+      <div className="eyebrow mb-1">{label}</div>
+      {children}
+      {change !== null && (up || down) && (
+        <div className={cn("fig mt-0.5 text-xs", good ? "text-pos" : "text-ink-3")}>
+          {up ? "▲" : "▼"} {pct(Math.abs(change))} <span className="text-ink-4">{t("insights.vsLast")}</span>
+        </div>
+      )}
+    </div>
   );
 }

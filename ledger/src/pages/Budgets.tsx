@@ -1,135 +1,212 @@
-import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { format, getDaysInMonth } from "date-fns";
-import { Plus } from "lucide-react";
-import { Page, Reveal } from "@/components/Page";
-import { PageHeader } from "@/components/PageHeader";
+import { useEffect, useMemo, useState } from "react";
+import { addMonths, getDaysInMonth, isSameMonth, startOfMonth } from "date-fns";
+import { ChevronLeft, ChevronRight, Plus, Target } from "lucide-react";
+import { toast } from "sonner";
+import { Page, TopBar, Meter, Empty, Tag } from "@/components/layout";
+import { Money } from "@/components/Money";
+import { CategoryGlyph } from "@/components/icons";
+import { CategoryGrid } from "@/components/CategoryGrid";
 import { Button } from "@/components/ui/button";
-import { Money, CountUp } from "@/components/AnimatedNumber";
-import { ProgressBar, ProgressRing } from "@/components/Progress";
-import { CategoryBadge } from "@/components/CategoryBadge";
-import { EmptyState } from "@/components/EmptyState";
-import { TargetIllustration } from "@/components/Illustrations";
-import { BudgetSheet } from "@/components/BudgetSheet";
-import { useBudgets, useCategoryMap, useTransactions } from "@/db/hooks";
-import type { Budget } from "@/db/db";
-import { budgetStatuses, type BudgetStatus } from "@/lib/stats";
-import { useMoney } from "@/lib/format";
-import { usePrefs } from "@/store/ui";
-import { cn } from "@/lib/utils";
-
-function statusLine(s: BudgetStatus, money: (n: number, o?: object) => string, hidden: boolean) {
-  const left = s.budget.amount - s.spent;
-  const m = (n: number) => (hidden ? "••••" : money(n, { cents: false }));
-  if (s.tone === "over") return { text: `Over by ${m(-left)} — it happens`, cls: "text-coral" };
-  if (s.ratio === 0) return { text: "Untouched so far 🌱", cls: "text-emerald" };
-  if (s.tone === "warn") return { text: `${m(left)} left — getting close`, cls: "text-amber" };
-  return { text: `${m(left)} left · on track`, cls: "text-emerald" };
-}
+import { Input, Field } from "@/components/ui/input";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { db, type Budget } from "@/db/db";
+import { useBudgets, useCategories, useCategoryMap, useTransactions } from "@/db/hooks";
+import { budgetLines, monthSummary } from "@/engine/ledger";
+import { useI18n } from "@/i18n";
+import { categoryName } from "@/lib/labels";
+import { useSheets } from "@/store/ui";
 
 export default function Budgets() {
-  const budgets = useBudgets();
+  const { t, date, currency, pct } = useI18n();
   const txns = useTransactions();
-  const cats = useCategoryMap();
-  const money = useMoney();
-  const hidden = usePrefs((s) => s.hideAmounts);
-  const [sheet, setSheet] = useState<{ open: boolean; budget: Budget | null }>({ open: false, budget: null });
-
-  const statuses = useMemo(() => budgetStatuses(budgets, txns ?? [], cats), [budgets, txns, cats]);
-  const total = statuses.reduce((s, b) => s + b.budget.amount, 0);
-  const spent = statuses.reduce((s, b) => s + Math.min(b.spent, b.budget.amount * 10), 0);
-  const ratio = total ? spent / total : 0;
-  const today = new Date();
-  const daysLeft = getDaysInMonth(today) - today.getDate() + 1;
-  const pace = today.getDate() / getDaysInMonth(today);
-  const tone = ratio > 1 ? "over" : ratio > pace + 0.1 ? "warn" : "good";
-  const perDay = Math.max(0, total - spent) / daysLeft;
-
-  const headline =
-    tone === "over"
-      ? { t: "Over budget this month", b: "No guilt — next month is a fresh page. Maybe trim one category for now?" }
-      : tone === "warn"
-        ? { t: "Running a bit hot", b: `You've used more than ${Math.round(pace * 100)}% of the month's budget. Easy does it.` }
-        : { t: "You're doing great", b: `Spending is behind the calendar — exactly where you want it.` };
+  const budgets = useBudgets();
+  const categories = useCategories();
+  const { openReview } = useSheets();
+  const [month, setMonth] = useState(() => startOfMonth(new Date()));
+  const [edit, setEdit] = useState<{ open: boolean; budget: Budget | null }>({ open: false, budget: null });
+  const all = txns ?? [];
+  const lines = useMemo(() => budgetLines(budgets, categories, all, month, currency), [budgets, categories, all, month, currency]);
+  const summary = useMemo(() => monthSummary(all, month, currency), [all, month, currency]);
+  const total = lines.reduce((s, l) => s + l.budget.amount, 0);
+  const spent = lines.reduce((s, l) => s + l.spent, 0);
+  const current = isSameMonth(month, new Date());
+  const daysLeft = current ? getDaysInMonth(month) - new Date().getDate() + 1 : 0;
+  const pace = lines[0]?.pace ?? (current ? new Date().getDate() / getDaysInMonth(month) : 1);
+  const status = spent > total ? "over" : total && spent / total > pace + 0.1 ? "watch" : "on_track";
+  const perDay = current && daysLeft > 0 ? Math.max(0, total - spent) / daysLeft : 0;
 
   return (
     <Page>
-      <PageHeader
-        eyebrow={format(today, "MMMM yyyy")}
-        title="Budgets"
-        action={
-          statuses.length > 0 && (
-            <Button size="icon" variant="soft" aria-label="Add budget" onClick={() => setSheet({ open: true, budget: null })}>
+      <TopBar
+        title={t("nav.budgets")}
+        actions={
+          budgets.length > 0 && (
+            <Button variant="ghost" size="icon" aria-label={t("budgets.add")} onClick={() => setEdit({ open: true, budget: null })}>
               <Plus />
             </Button>
           )
         }
       />
+      <div className="flex items-center justify-between px-3">
+        <Button variant="ghost" size="icon-sm" onClick={() => setMonth((m) => addMonths(m, -1))} aria-label={t("common.previous")}>
+          <ChevronLeft className="rtl:rotate-180" />
+        </Button>
+        <span className="text-sm font-medium">{date(month, "MMMM yyyy")}</span>
+        <Button variant="ghost" size="icon-sm" disabled={current} onClick={() => setMonth((m) => addMonths(m, 1))} aria-label={t("common.next")}>
+          <ChevronRight className="rtl:rotate-180" />
+        </Button>
+      </div>
 
-      {statuses.length === 0 ? (
-        <EmptyState
-          art={<TargetIllustration />}
-          title="Give your money a plan"
-          body="Set a monthly amount for the things you love (and the things you have to). I'll cheer you on as you go."
+      {lines.length === 0 ? (
+        <Empty
+          icon={<Target />}
+          title={t("budgets.emptyTitle")}
+          body={t("budgets.emptyBody")}
           action={
-            <Button onClick={() => setSheet({ open: true, budget: null })}>
-              <Plus /> Create a budget
+            <Button variant="ink" onClick={() => setEdit({ open: true, budget: null })}>
+              {t("budgets.create")}
             </Button>
           }
         />
       ) : (
         <>
-          <Reveal i={0} className="px-5">
-            <div className="surface-card flex items-center gap-5 p-5">
-              <ProgressRing value={ratio} tone={tone} size={116} stroke={11}>
-                <CountUp value={Math.round(ratio * 100)} suffix="%" className="text-2xl font-semibold" />
-                <span className="text-[11px] text-muted-foreground">used</span>
-              </ProgressRing>
-              <div className="min-w-0 flex-1">
-                <div className="font-semibold">{headline.t}</div>
-                <p className="mt-0.5 text-sm leading-snug text-muted-foreground">{headline.b}</p>
-                <div className="mt-3 text-sm">
-                  <Money value={Math.max(0, total - spent)} cents={false} className={cn("text-lg font-semibold", tone === "over" ? "text-coral" : "text-foreground")} />
-                  <span className="text-muted-foreground"> left</span>
-                </div>
-                {tone !== "over" && (
-                  <div className="text-xs text-muted-foreground">
-                    ≈ <Money value={perDay} cents={false} fromZero={false} /> a day for {daysLeft} {daysLeft === 1 ? "day" : "days"}
-                  </div>
-                )}
-              </div>
+          <section className="px-5 pb-2 pt-4">
+            <div className="grid grid-cols-3 gap-4">
+              <Stat label={t("budgets.budgeted")}>
+                <Money value={total} cents={false} size="lg" />
+              </Stat>
+              <Stat label={t("budgets.spentBudgeted")}>
+                <Money value={spent} cents={false} size="lg" />
+              </Stat>
+              <Stat label={spent > total ? t("budgets.overBy") : t("budgets.remaining")}>
+                <Money value={Math.abs(total - spent)} cents={false} size="lg" tone={spent > total ? "neg" : "ink"} />
+              </Stat>
             </div>
-          </Reveal>
+            <Meter className="mt-4" value={total ? spent / total : 0} pace={pace} status={status} />
+            <p className="mt-2.5 text-sm text-ink-3">
+              {current
+                ? status === "over"
+                  ? t("budgets.statusOver")
+                  : t(status === "watch" ? "budgets.statusWatch" : "budgets.statusOk", { pct: pct(pace) })
+                : t("budgets.statusPast", { pct: pct(total ? spent / total : 0) })}
+              {current && perDay > 0 && (
+                <>
+                  {" "}
+                  {t("budgets.perDayPrefix")} <Money value={perDay} cents={false} size="sm" className="font-medium text-ink" /> {t("budgets.perDaySuffix", { count: daysLeft })}
+                </>
+              )}
+            </p>
+          </section>
 
-          <div className="space-y-3 px-5 pt-4">
-            {statuses.map((s, i) => {
-              const line = statusLine(s, money, hidden);
-              return (
-                <Reveal key={s.budget.categoryId} i={i + 1}>
-                  <motion.button whileTap={{ scale: 0.98 }} onClick={() => setSheet({ open: true, budget: s.budget })} className="surface-card block w-full p-4 text-left">
-                    <div className="flex items-center gap-3">
-                      <CategoryBadge category={s.category} />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span className="truncate font-semibold">{s.category.name}</span>
-                          <span className="text-sm text-muted-foreground">
-                            <Money value={s.spent} cents={false} className="font-semibold text-foreground" /> / <Money value={s.budget.amount} cents={false} fromZero={false} />
-                          </span>
-                        </div>
-                        <div className={cn("text-[13px] font-medium", line.cls)}>{line.text}</div>
-                      </div>
-                    </div>
-                    <ProgressBar className="mt-3" value={s.ratio} tone={s.tone} pace={s.paceRatio} />
-                  </motion.button>
-                </Reveal>
-              );
-            })}
-            <p className="pt-1 text-center text-xs text-muted-foreground">The little tick shows where you'd be if you spent evenly all month.</p>
+          {summary.unknownOut > 0 && (
+            <button onClick={() => openReview()} className="tap mx-5 mt-3 flex w-[calc(100%-2.5rem)] items-center justify-between rounded border border-accent/40 bg-accent-wash px-3 py-2.5 text-start text-sm">
+              <span className="text-ink-2">
+                <Money value={summary.unknownOut} cents={false} size="sm" className="font-medium text-ink" /> {t("budgets.uncategorized")}
+              </span>
+              <span className="font-medium text-accent-ink">{t("common.review")}</span>
+            </button>
+          )}
+
+          <div className="mt-6 border-y border-rule bg-surface">
+            <div className="grid grid-cols-[1fr_auto] px-5 pb-1 pt-3 text-2xs font-medium uppercase tracking-wider text-ink-3">
+              <span>{t("budgets.category")}</span>
+              <span>{t("budgets.spentOfBudget")}</span>
+            </div>
+            {lines.map((l) => (
+              <button key={l.category.id} onClick={() => setEdit({ open: true, budget: l.budget })} className="tap block w-full border-t border-rule px-5 py-3 text-start first:border-t-0">
+                <div className="flex items-center gap-3">
+                  <CategoryGlyph category={l.category} size="sm" />
+                  <span className="flex-1 truncate text-base font-medium">{categoryName(l.category, t)}</span>
+                  <span className="text-sm text-ink-3">
+                    <Money value={l.spent} cents={false} size="sm" className="font-medium text-ink" /> / <Money value={l.budget.amount} cents={false} size="sm" tone="muted" />
+                  </span>
+                </div>
+                <Meter className="mt-2.5" value={l.ratio} pace={current ? l.pace : undefined} status={l.status} />
+                <div className="mt-1.5 flex items-center justify-between text-xs">
+                  <span className="text-ink-3">
+                    {l.remaining >= 0 ? (
+                      <>
+                        <Money value={l.remaining} cents={false} size="sm" tone="muted" /> {t("budgets.leftWord")}
+                      </>
+                    ) : (
+                      <>
+                        <Money value={-l.remaining} cents={false} size="sm" tone="neg" /> {t("budgets.overWord")}
+                      </>
+                    )}
+                  </span>
+                  {l.status !== "on_track" && <Tag tone={l.status === "over" ? "neg" : "warn"}>{t(l.status === "over" ? "budgets.over" : "budgets.watch")}</Tag>}
+                </div>
+              </button>
+            ))}
           </div>
+          {current && <p className="px-5 pt-3 text-xs text-ink-4">{t("budgets.tickHint")}</p>}
         </>
       )}
 
-      <BudgetSheet open={sheet.open} budget={sheet.budget} onOpenChange={(open) => setSheet((s) => ({ ...s, open }))} />
+      <BudgetSheet open={edit.open} budget={edit.budget} onOpenChange={(open) => setEdit((s) => ({ ...s, open }))} />
     </Page>
+  );
+}
+
+function Stat({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="eyebrow mb-1">{label}</div>
+      {children}
+    </div>
+  );
+}
+
+function BudgetSheet({ open, budget, onOpenChange }: { open: boolean; budget: Budget | null; onOpenChange: (o: boolean) => void }) {
+  const { t, currency } = useI18n();
+  const categories = useCategories();
+  const cats = useCategoryMap();
+  const budgets = useBudgets();
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [amount, setAmount] = useState("");
+  useEffect(() => {
+    if (!open) return;
+    setCategoryId(budget?.categoryId ?? null);
+    setAmount(budget ? String(budget.amount / 100) : "");
+  }, [open, budget]);
+  const used = new Set(budgets.map((b) => b.categoryId));
+  const available = categories.filter((c) => c.kind === "expense" && (!used.has(c.id) || c.id === budget?.categoryId));
+
+  async function save() {
+    const minor = Math.round((parseFloat(amount.replace(",", ".")) || 0) * 100);
+    if (!categoryId || minor <= 0) return toast(t("budgets.needAmount"));
+    await db.budgets.put({ categoryId, amount: minor, updatedAt: Date.now() });
+    toast.success(t("budgets.saved"));
+    onOpenChange(false);
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent title={budget ? categoryName(cats.get(budget.categoryId), t) : t("budgets.add")} description={t("budgets.sheetHint")}>
+        <div className="no-scrollbar space-y-4 overflow-y-auto px-5 pb-5 pt-4">
+          {!budget && <CategoryGrid categories={available} selectedId={categoryId} onPick={setCategoryId} />}
+          <Field label={t("budgets.monthlyAmount", { currency })}>
+            <Input inputMode="decimal" className="fig text-lg" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          </Field>
+          <div className="flex gap-2">
+            {budget && (
+              <Button
+                variant="danger"
+                onClick={async () => {
+                  await db.budgets.delete(budget.categoryId);
+                  toast(t("budgets.removed"), { action: { label: t("common.undo"), onClick: () => db.budgets.put(budget) } });
+                  onOpenChange(false);
+                }}
+              >
+                {t("common.remove")}
+              </Button>
+            )}
+            <Button variant="ink" className="flex-1" onClick={save}>
+              {t("common.save")}
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -1,70 +1,121 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { ArrowRight, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { PiggyIllustration } from "@/components/Illustrations";
-import { CURRENCIES } from "@/lib/format";
-import { loadSampleData } from "@/db/seed";
+import { Input, Select } from "@/components/ui/input";
+import { Segmented } from "@/components/ui/segmented";
+import { db, uid } from "@/db/db";
+import { ensureBasics, loadSampleData } from "@/db/seed";
+import { INSTITUTIONS } from "@/engine/institutions";
+import { CURRENCIES } from "@/lib/currencies";
+import { useI18n } from "@/i18n";
 import { usePrefs } from "@/store/ui";
+import { cn } from "@/lib/utils";
 
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 260, damping: 26 } },
-};
+const QUICK = ["cib", "nbe", "banquemisr", "qnb", "telda", "vodafonecash", "valu", "hsbc"];
 
+/** Three short steps: who you are, where your money lives, done. */
 export default function Onboarding() {
+  const { t, lang } = useI18n();
   const setPrefs = usePrefs((s) => s.setPrefs);
+  const language = usePrefs((s) => s.language);
+  const [step, setStep] = useState(0);
   const [name, setName] = useState("");
-  const [currency, setCurrency] = useState(usePrefs.getState().currency);
+  const [currency, setCurrency] = useState("EGP");
+  const [picked, setPicked] = useState<Record<string, string>>({});
 
-  const finish = async (sample: boolean) => {
-    if (sample) await loadSampleData();
-    setPrefs({ name: name.trim(), currency, onboarded: true });
-    toast.success(name.trim() ? `Lovely to meet you, ${name.trim()} 👋` : "You're all set 👋", {
-      description: sample ? "Sample data is loaded — erase it anytime in Settings." : "Tap + to log your first transaction.",
-    });
-  };
+  async function finish(sample: boolean) {
+    if (sample) {
+      await loadSampleData();
+    } else {
+      await ensureBasics();
+      const now = Date.now();
+      await db.accounts.bulkAdd(
+        Object.entries(picked).map(([key, last4], i) => {
+          const inst = INSTITUTIONS.find((x) => x.key === key)!;
+          return { id: uid(), name: lang === "ar" ? inst.nameAr : inst.name, kind: inst.kind, institution: key, last4: /^\d{4}$/.test(last4) ? last4 : null, currency, startingBalance: 0, archived: false, createdAt: now + i };
+        }),
+      );
+    }
+    setPrefs({ name: name.trim(), currency, onboarded: true, sampleMode: sample });
+  }
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden px-6 pb-[max(24px,env(safe-area-inset-bottom))] pt-[calc(env(safe-area-inset-top)+24px)]">
-      <div className="pointer-events-none absolute -left-24 -top-24 size-72 rounded-full bg-emerald/25 blur-3xl" />
-      <div className="pointer-events-none absolute -right-24 top-40 size-72 rounded-full bg-amber/20 blur-3xl" />
+    <div className="flex h-full flex-col overflow-y-auto px-6 pb-[max(20px,env(safe-area-inset-bottom))] pt-[calc(env(safe-area-inset-top)+28px)]">
+      <div className="mx-auto flex w-full max-w-sm flex-1 flex-col">
+        <div className="flex items-center justify-between">
+          <span className="text-md font-semibold tracking-tight">Ledger</span>
+          <Segmented<"en" | "ar"> size="sm" className="w-36" value={language} onChange={(l) => setPrefs({ language: l })} options={[{ value: "en", label: "EN" }, { value: "ar", label: "ع" }]} />
+        </div>
+        <div className="mt-2 flex gap-1">
+          {[0, 1].map((i) => (
+            <span key={i} className={cn("h-0.5 flex-1 rounded-full", i <= step ? "bg-ink" : "bg-rule")} />
+          ))}
+        </div>
 
-      <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.08 } } }} className="relative mx-auto flex w-full max-w-sm flex-1 flex-col">
-        <motion.div variants={item} className="mx-auto mt-4 w-48">
-          <PiggyIllustration />
-        </motion.div>
-        <motion.h1 variants={item} className="mt-6 text-[34px] font-bold leading-[1.1] tracking-tight">
-          Hi, I'm <span className="bg-gradient-to-r from-emerald to-amber bg-clip-text text-transparent">Ledger</span>.
-          <br />
-          Let's make money feel lighter.
-        </motion.h1>
-        <motion.p variants={item} className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-          Track spending, set friendly budgets, and spot little wins. Everything stays on this phone — no sign-up, ever.
-        </motion.p>
-
-        <motion.div variants={item} className="mt-7 space-y-3">
-          <Input placeholder="What should I call you?" value={name} onChange={(e) => setName(e.target.value)} maxLength={20} autoComplete="given-name" />
-          <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="h-12 w-full rounded-2xl border border-input bg-card/60 px-4 text-base outline-none">
-            {CURRENCIES.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.code} · {c.label}
-              </option>
-            ))}
-          </select>
-        </motion.div>
-
-        <motion.div variants={item} className="mt-auto space-y-2 pt-8">
-          <Button size="lg" className="w-full" onClick={() => finish(false)}>
-            Start fresh <ArrowRight />
-          </Button>
-          <Button size="lg" variant="ghost" className="w-full" onClick={() => finish(true)}>
-            <Sparkles /> Explore with sample data
-          </Button>
-        </motion.div>
-      </motion.div>
+        {step === 0 ? (
+          <>
+            <h1 className="mt-12 text-[30px] font-semibold leading-[1.15] tracking-tight">{t("onb.title")}</h1>
+            <p className="mt-4 text-base leading-relaxed text-ink-2">{t("onb.body")}</p>
+            <ul className="mt-6 space-y-2 border-s-2 border-ink ps-4 text-sm text-ink-2">
+              <li>{t("onb.p1")}</li>
+              <li>{t("onb.p2")}</li>
+              <li>{t("onb.p3")}</li>
+            </ul>
+            <div className="mt-8 space-y-3">
+              <Input placeholder={t("onb.name")} value={name} onChange={(e) => setName(e.target.value)} maxLength={24} autoComplete="given-name" />
+              <Select value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                {CURRENCIES.map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
+              </Select>
+            </div>
+            <div className="mt-auto space-y-2 pt-8">
+              <Button size="lg" variant="ink" className="w-full" onClick={() => setStep(1)}>
+                {t("common.continue")} <ArrowRight className="rtl:rotate-180" />
+              </Button>
+              <Button size="lg" variant="ghost" className="w-full" onClick={() => finish(true)}>
+                {t("onb.sample")}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <h1 className="mt-12 text-xl font-semibold">{t("onb.whereTitle")}</h1>
+            <p className="mt-2 text-sm leading-relaxed text-ink-2">{t("onb.whereBody")}</p>
+            <div className="mt-6 divide-y divide-rule border-y border-rule">
+              {QUICK.map((key) => {
+                const inst = INSTITUTIONS.find((x) => x.key === key)!;
+                const on = key in picked;
+                return (
+                  <div key={key} className="flex items-center gap-3 py-2.5">
+                    <button
+                      onClick={() => setPicked((s) => (on ? Object.fromEntries(Object.entries(s).filter(([k]) => k !== key)) : { ...s, [key]: "" }))}
+                      className={cn("flex size-5 items-center justify-center rounded-xs border", on ? "border-ink bg-ink text-paper" : "border-rule-strong")}
+                      aria-pressed={on}
+                      aria-label={inst.name}
+                    >
+                      {on && <span className="text-xs">✓</span>}
+                    </button>
+                    <span className="flex-1 text-base">{lang === "ar" ? inst.nameAr : inst.name}</span>
+                    {on && inst.kind !== "wallet" && (
+                      <Input className="fig h-9 w-24 text-sm" inputMode="numeric" maxLength={4} placeholder={t("onb.last4")} value={picked[key]} onChange={(e) => setPicked((s) => ({ ...s, [key]: e.target.value.replace(/\D/g, "") }))} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-ink-3">{t("onb.whereHint")}</p>
+            <div className="mt-auto space-y-2 pt-8">
+              <Button size="lg" variant="ink" className="w-full" onClick={() => finish(false)}>
+                {t("onb.start")}
+              </Button>
+              <Button size="lg" variant="ghost" className="w-full" onClick={() => setStep(0)}>
+                {t("common.back")}
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
