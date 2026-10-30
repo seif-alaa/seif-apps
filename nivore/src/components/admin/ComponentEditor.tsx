@@ -167,7 +167,12 @@ export function ComponentEditor({ initial, specFields, isNew, catalog, sample }:
 }
 
 function SpecField({ f, value, onChange, movementFamilies }: { f: FieldDesc; value: unknown; onChange: (v: unknown) => void; movementFamilies: string[] }) {
-  const label = f.key.replace(/([A-Z])/g, " $1").replace(/^./, (x) => x.toUpperCase()).replace(/ Mm$/, " (mm)").replace(/ Hex$/, " colour");
+  const label = f.key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (x) => x.toUpperCase())
+    .replace(/ Mm$/, " (mm)")
+    .replace(/ Hex$/, " (hex)")
+    .replace(/Color/g, "Colour");
   if (f.kind === "boolean") {
     return (
       <label className="flex min-h-11 items-center gap-3 text-[14px]">
@@ -217,13 +222,22 @@ function SpecField({ f, value, onChange, movementFamilies }: { f: FieldDesc; val
     );
   }
   const isColour = /hex$/i.test(f.key);
+  const textInput = <input className="field text-[14px]" value={value == null ? "" : String(value)} placeholder={f.nullable ? "Not set" : undefined} onChange={(e) => onChange(e.target.value === "" && f.nullable ? null : e.target.value)} />;
+  if (!isColour) {
+    return (
+      <label className={f.kind === "string" && f.multiline ? "block md:col-span-2" : "block"}>
+        <span className="field-label">{label}</span>
+        {textInput}
+      </label>
+    );
+  }
   return (
-    <label className={f.kind === "string" && f.multiline ? "block md:col-span-2" : "block"}>
-      <span className="field-label">{label}</span>
-      <span className="flex gap-2">
-        {isColour && <input type="color" aria-label={`${label} picker`} className="h-11 w-11 shrink-0 cursor-pointer border border-line bg-ivory" value={typeof value === "string" ? value : "#000000"} onChange={(e) => onChange(e.target.value)} />}
-        <input className="field text-[14px]" value={value == null ? "" : String(value)} placeholder={f.nullable ? "Not set" : undefined} onChange={(e) => onChange(e.target.value === "" && f.nullable ? null : e.target.value)} />
-      </span>
-    </label>
+    <div className="flex items-end gap-2">
+      <input type="color" aria-label={`${label}: picker`} className="h-11 w-11 shrink-0 cursor-pointer border border-line bg-ivory" value={typeof value === "string" ? value : "#000000"} onChange={(e) => onChange(e.target.value)} />
+      <label className="block flex-1">
+        <span className="field-label">{label}</span>
+        {textInput}
+      </label>
+    </div>
   );
 }

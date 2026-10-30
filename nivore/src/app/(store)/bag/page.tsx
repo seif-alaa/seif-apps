@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { BagView } from "@/components/commerce/Bag";
 import { getSettings, getStorefront } from "@/server/catalog";
 
+/** Depends on live storefront locks, so it is never served from cache. */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: "Your bag", robots: { index: false } };
 
 export default async function BagPage() {

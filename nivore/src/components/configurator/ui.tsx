@@ -32,7 +32,7 @@ export function AnimatedPrice({ value, className }: { value: number; className?:
   }, [value]);
   return (
     <>
-      <span className={cn("tabular", className)} aria-hidden="true">
+      <span className={cn("tabular", className)} aria-hidden="true" data-testid="total-price">
         {formatEGP(shown)}
       </span>
       <span className="sr-only" aria-live="polite">

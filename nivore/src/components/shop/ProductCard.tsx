@@ -2,11 +2,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatEGP } from "@/domain/money";
 import type { Product } from "@/domain/models";
-import { buildLayers, StaticWatch } from "@/components/watch/layers";
-import type { ResolvedBuild } from "@/components/watch/geometry";
 
-/** Catalogue card. Real photography when uploaded; otherwise a server-rendered illustrative SVG (no JS). */
-export function ProductCard({ product, build, priority = false, caliber }: { product: Product; build: ResolvedBuild; priority?: boolean; caliber?: string }) {
+/**
+ * Catalogue card. Real photography when uploaded; otherwise an illustrative
+ * SVG from /api/render, loaded as a cacheable image (keeps HTML small).
+ */
+export function ProductCard({ product, query, priority = false, caliber }: { product: Product; query: string; priority?: boolean; caliber?: string }) {
   const photo = product.images[0];
   const soldOut = product.soldOut || product.stockQuantity < 1;
   return (
@@ -15,9 +16,17 @@ export function ProductCard({ product, build, priority = false, caliber }: { pro
         {photo ? (
           <Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw" className="object-cover" priority={priority} />
         ) : (
-          <div className="absolute inset-[4%] transition-transform duration-700 ease-[var(--ease-settle)] group-hover:scale-[1.025]">
-            <StaticWatch layers={buildLayers(build, "front", [])} idPrefix={`pc-${product.id}`} className="h-full w-full" title={`${product.name} ${product.dialLabel}, illustrative rendering`} />
-          </div>
+          // eslint-disable-next-line @next/next/no-img-element -- vector render; next/image adds nothing for SVG
+          <img
+            src={`/api/render?${query}`}
+            alt={`${product.name} ${product.dialLabel}, illustrative rendering`}
+            width={600}
+            height={860}
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={priority ? "high" : "auto"}
+            className="absolute inset-[4%] h-[92%] w-[92%] object-contain transition-transform duration-700 ease-[var(--ease-settle)] group-hover:scale-[1.025]"
+          />
         )}
         {soldOut && <span className="absolute left-3 top-3 bg-ivory px-2 py-1 text-[10px] uppercase tracking-[0.16em]">Sold</span>}
       </div>

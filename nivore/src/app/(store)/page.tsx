@@ -10,6 +10,7 @@ import { auctionStatus, minimumNextBid, PUBLIC_STATUS_LABEL } from "@/domain/auc
 import { decodeConfiguration, encodeConfiguration } from "@/domain/configuration";
 import { formatEGP } from "@/domain/money";
 import { getContent, getEngine, getPublicCatalog, getVisibleProducts } from "@/server/catalog";
+import { productView } from "@/server/views";
 
 export default async function HomePage() {
   const [content, products, engine, catalog] = await Promise.all([getContent(), getVisibleProducts(), getEngine(), getPublicCatalog()]);
@@ -32,7 +33,8 @@ export default async function HomePage() {
             label: d.spec.colorName,
             swatch: d.spec.colorHex,
             query: encodeConfiguration(proposal.next, catalog.components).toString(),
-            node: <StaticWatch layers={buildLayers(b, "front", catalog.assets)} idPrefix={`tz-${id}`} className="h-full w-full" title={`${d.spec.colorName} dial, illustrative`} />,
+            // eslint-disable-next-line @next/next/no-img-element -- cacheable vector render, lazy below the fold
+            node: <img src={`/api/render?${encodeConfiguration(proposal.next, catalog.components).toString()}`} alt={`${d.spec.colorName} dial, illustrative`} width={600} height={860} loading="lazy" decoding="async" className="h-full w-full" />,
           };
         })
         .filter((v) => v != null)
@@ -112,7 +114,7 @@ export default async function HomePage() {
         <ul className="mt-10 grid gap-x-6 gap-y-12 xs:grid-cols-2 lg:grid-cols-3">
           {featured.map((p) => (
             <li key={p.id}>
-              <ProductCard product={p} build={resolveBuild(p.configuration, engine.get, engine.family)} caliber={engine.family((engine.get(p.configuration.parts.movement)?.spec as { familyId: string })?.familyId ?? "")?.caliber} />
+              <ProductCard product={p} query={productView(p, engine).query} caliber={productView(p, engine).caliber} />
             </li>
           ))}
         </ul>
@@ -147,7 +149,8 @@ export default async function HomePage() {
           <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 py-20 md:px-10 lg:grid-cols-2 lg:py-28">
             <div className="relative mx-auto aspect-[600/860] w-[60%] max-w-[360px]">
               {auctionConfig && (
-                <StaticWatch layers={buildLayers(resolveBuild(auctionConfig, engine.get, engine.family), "front", catalog.assets)} idPrefix="auc" className="h-full w-full" title={`${auction.title}, illustrative rendering`} />
+                // eslint-disable-next-line @next/next/no-img-element -- cacheable vector render, lazy below the fold
+                <img src={`/api/render?${encodeConfiguration(auctionConfig, catalog.components).toString()}`} alt={`${auction.title}, illustrative rendering`} width={600} height={860} loading="lazy" decoding="async" className="h-full w-full" />
               )}
             </div>
             <div>

@@ -3,6 +3,9 @@ import Link from "next/link";
 import { CheckoutForm } from "@/components/commerce/Checkout";
 import { getSettings, getStorefront, isDevDriver } from "@/server/catalog";
 
+/** Depends on live storefront locks, so it is never served from cache. */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: "Checkout", robots: { index: false } };
 
 export default async function CheckoutPage() {

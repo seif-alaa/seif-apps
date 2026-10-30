@@ -1,18 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Monogram } from "@/components/brand/Brand";
-import { resolveBuild } from "@/components/watch/geometry";
-import { buildLayers, StaticWatch } from "@/components/watch/layers";
 import { repos } from "@/data/repositories";
 import { auctionStatus, minimumNextBid, PUBLIC_STATUS_LABEL } from "@/domain/auction";
-import { decodeConfiguration } from "@/domain/configuration";
+import { decodeConfiguration, encodeConfiguration } from "@/domain/configuration";
 import { formatEGP } from "@/domain/money";
-import { getEngine, getPublicCatalog } from "@/server/catalog";
+import { getPublicCatalog } from "@/server/catalog";
 
 export const metadata: Metadata = { title: "Rare pieces", description: "One-of-one watches from the NIVORÉ atelier, offered in a private auction room." };
 
 export default async function RarePiecesPage() {
-  const [all, engine, catalog] = await Promise.all([repos().auctions.list(), getEngine(), getPublicCatalog()]);
+  const [all, catalog] = await Promise.all([repos().auctions.list(), getPublicCatalog()]);
   const now = new Date();
   const auctions = all.filter((a) => a.published && !a.archived).sort((a, b) => a.closesAt.localeCompare(b.closesAt));
   const fmt = (iso: string) => new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Cairo" }).format(new Date(iso));
@@ -36,7 +34,8 @@ export default async function RarePiecesPage() {
             return (
               <li key={a.id} className="grid gap-10 py-16 md:grid-cols-[0.8fr_1.2fr] md:items-center">
                 <Link href={`/rare-pieces/${a.slug}`} className="relative mx-auto block aspect-[600/860] w-[70%] max-w-[340px] bg-cream">
-                  {cfg && <StaticWatch layers={buildLayers(resolveBuild(cfg, engine.get, engine.family), "front", catalog.assets)} idPrefix={`rp${i}`} className="absolute inset-[4%] h-[92%] w-[92%]" title={`${a.title}, illustrative`} />}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- cacheable vector render */}
+                  {cfg && <img src={`/api/render?${encodeConfiguration(cfg, catalog.components).toString()}`} alt={`${a.title}, illustrative`} width={600} height={860} loading={i ? "lazy" : "eager"} className="absolute inset-[4%] h-[92%] w-[92%]" />}
                 </Link>
                 <div>
                   <p className="eyebrow">{PUBLIC_STATUS_LABEL[st]}</p>

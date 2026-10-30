@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { memo, useMemo, useRef, useState, type ReactNode } from "react";
 import { effectivePrice, type MovementFamily, type PreviewAsset, type PublicComponent } from "@/domain/catalog";
 import type { Engine, OptionEvaluation } from "@/domain/compatibility";
 import { canonicalConfiguration, SLOT_LABEL, type Configuration, type Slot } from "@/domain/configuration";
@@ -8,7 +8,7 @@ import { formatDelta, formatEGP } from "@/domain/money";
 import type { PricingSettings } from "@/domain/pricing";
 import { resolveBuild, type ResolvedBuild } from "@/components/watch/geometry";
 import { cn } from "@/lib/cn";
-import { ComplicationGlyph, PartThumb, type ThumbKind } from "./thumbs";
+import { ComplicationGlyph, LazyThumb, PartThumb, type ThumbKind } from "./thumbs";
 import { OptionCard, StockNote } from "./ui";
 
 export interface StepCtx {
@@ -50,7 +50,12 @@ function useThumbs(ctx: StepCtx, slot: Slot, kind: ThumbKind) {
     if (!node) {
       const cfg = opt.proposal?.next ?? { ...ctx.evalConfig, parts: { ...ctx.evalConfig.parts, [slot]: id } };
       const b = resolveBuild(cfg, ctx.engine.get, ctx.engine.family);
-      node = <PartThumb build={b} kind={kind} assets={ctx.assets} uid={`${kind}${id}`} />;
+      const spec = opt.component.spec as { colorHex?: string };
+      node = (
+        <LazyThumb swatch={kind === "dial" || kind === "band" || kind === "insert" ? spec.colorHex : undefined}>
+          <PartThumb build={b} kind={kind} assets={ctx.assets} uid={`${kind}${id}`} />
+        </LazyThumb>
+      );
       cache.current.set(id, node);
     }
     return node;
@@ -151,7 +156,7 @@ function Chips<T extends string>({ value, options, onChange, label }: { value: T
 
 /* ── 01 Movement ─────────────────────────────────────────────────────── */
 
-export function MovementStep({ ctx, families }: { ctx: StepCtx; families: MovementFamily[] }) {
+export const MovementStep = memo(function MovementStep({ ctx, families }: { ctx: StepCtx; families: MovementFamily[] }) {
   const options = useMemo(() => ctx.engine.options(ctx.evalConfig, "movement"), [ctx.engine, ctx.evalConfig]);
   const [open, setOpen] = useState<string | null>(null);
   return (
@@ -218,7 +223,7 @@ export function MovementStep({ ctx, families }: { ctx: StepCtx; families: Moveme
       </p>
     </div>
   );
-}
+});
 
 /* ── 02 Dial ─────────────────────────────────────────────────────────── */
 
@@ -233,7 +238,7 @@ const FAMILY_SWATCH: Record<string, [string, string]> = {
   dark: ["Black", "#1d1b1a"],
 };
 
-export function DialStep({ ctx }: { ctx: StepCtx }) {
+export const DialStep = memo(function DialStep({ ctx }: { ctx: StepCtx }) {
   const dials = ctx.engine.listType("dial");
   const families = [...new Set(dials.map((d) => (d.spec as { colorFamily: string }).colorFamily))];
   const [fam, setFam] = useState<string>("all");
@@ -262,11 +267,11 @@ export function DialStep({ ctx }: { ctx: StepCtx }) {
       />
     </div>
   );
-}
+});
 
 /* ── 03 Case ─────────────────────────────────────────────────────────── */
 
-export function CaseStep({ ctx }: { ctx: StepCtx }) {
+export const CaseStep = memo(function CaseStep({ ctx }: { ctx: StepCtx }) {
   return (
     <div className="space-y-3">
       <p className="text-[12px] text-taupe-ink">Thumbnails share one scale, so sizes compare honestly.</p>
@@ -290,11 +295,11 @@ export function CaseStep({ ctx }: { ctx: StepCtx }) {
       />
     </div>
   );
-}
+});
 
 /* ── 04 Hands ────────────────────────────────────────────────────────── */
 
-export function HandsStep({ ctx }: { ctx: StepCtx }) {
+export const HandsStep = memo(function HandsStep({ ctx }: { ctx: StepCtx }) {
   return (
     <OptionGrid
       ctx={ctx}
@@ -306,11 +311,11 @@ export function HandsStep({ ctx }: { ctx: StepCtx }) {
       }}
     />
   );
-}
+});
 
 /* ── 05 Bezel & crystal ─────────────────────────────────────────────── */
 
-export function BezelStep({ ctx }: { ctx: StepCtx }) {
+export const BezelStep = memo(function BezelStep({ ctx }: { ctx: StepCtx }) {
   const bezelApplies = ctx.engine.applicable(ctx.config, "bezel");
   const insertApplies = ctx.engine.applicable(ctx.config, "insert");
   const ringApplies = ctx.engine.applicable(ctx.config, "chapterRing");
@@ -348,11 +353,11 @@ export function BezelStep({ ctx }: { ctx: StepCtx }) {
       </Section>
     </div>
   );
-}
+});
 
 /* ── 06 Bracelet / strap ────────────────────────────────────────────── */
 
-export function BandStep({ ctx }: { ctx: StepCtx }) {
+export const BandStep = memo(function BandStep({ ctx }: { ctx: StepCtx }) {
   const [kind, setKind] = useState<"all" | "bracelet" | "leather" | "rubber" | "fabric">("all");
   const claspApplies = ctx.engine.applicable(ctx.config, "clasp");
   return (
@@ -390,11 +395,11 @@ export function BandStep({ ctx }: { ctx: StepCtx }) {
       </Section>
     </div>
   );
-}
+});
 
 /* ── 07 Personalisation ─────────────────────────────────────────────── */
 
-export function PersonalizeStep({ ctx }: { ctx: StepCtx }) {
+export const PersonalizeStep = memo(function PersonalizeStep({ ctx }: { ctx: StepCtx }) {
   const cb = ctx.build.caseback;
   const engr = ctx.pricing.engraving;
   const engravable = engr.enabled && cb?.spec.kind === "solid" && cb.spec.engravable;
@@ -471,4 +476,4 @@ export function PersonalizeStep({ ctx }: { ctx: StepCtx }) {
       )}
     </div>
   );
-}
+});

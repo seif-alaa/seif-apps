@@ -2,6 +2,9 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { getContent, getSettings, isDevDriver } from "@/server/catalog";
 
+/** Cached and regenerated at most every minute; admin edits revalidate immediately. */
+export const revalidate = 60;
+
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
   const [settings, content] = await Promise.all([getSettings(), getContent()]);
   return (

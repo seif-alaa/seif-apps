@@ -23,7 +23,7 @@ export default async function TimepiecesPage() {
       complication: c.includes("gmt") ? "GMT" : c.includes("day") ? "Day and date" : c.includes("date") ? "Date" : "Time only",
       band: v.build.band?.spec.kind ?? "",
       available: v.available,
-      node: <ProductCard product={p} build={v.build} caliber={v.caliber} priority={i < 3} />,
+      node: <ProductCard product={p} query={v.query} caliber={v.caliber} priority={i < 3} />,
     };
   });
   return (

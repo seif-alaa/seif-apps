@@ -12,6 +12,10 @@ import { disclosure, productView } from "@/server/views";
 
 type Params = Promise<{ slug: string }>;
 
+export async function generateStaticParams() {
+  return (await getVisibleProducts()).map((p) => ({ slug: p.slug }));
+}
+
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
   const p = (await getVisibleProducts()).find((x) => x.slug === slug);
@@ -130,7 +134,7 @@ export default async function ProductPage({ params }: { params: Params }) {
               const rv = productView(r, engine);
               return (
                 <li key={r.id}>
-                  <ProductCard product={r} build={rv.build} caliber={rv.caliber} />
+                  <ProductCard product={r} query={rv.query} caliber={rv.caliber} />
                 </li>
               );
             })}

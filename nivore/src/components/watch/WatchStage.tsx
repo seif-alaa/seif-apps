@@ -27,6 +27,47 @@ interface Item {
   n: number;
 }
 
+/**
+ * A layer's key fully determines its appearance, so its SVG/raster tree is
+ * rendered once and skipped on every later re-render (keeps interactions fast).
+ */
+const LayerContent = memo(
+  function LayerContent({ layer: l, uid }: { layer: Layer; uid: string }) {
+    if (l.svg) {
+      return (
+        <svg viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`} className="absolute inset-0 h-full w-full" aria-hidden="true" data-layer={l.slot}>
+          {l.svg(uid)}
+        </svg>
+      );
+    }
+    return (
+      <>
+        {l.assets?.map((p) => (
+          // eslint-disable-next-line @next/next/no-img-element -- positioned layer with physical alignment; already optimised at upload
+          <img
+            key={p.asset.id}
+            src={p.asset.src}
+            alt=""
+            decoding="async"
+            draggable={false}
+            className="absolute max-w-none select-none"
+            style={{
+              left: `${(p.left / CANVAS_W) * 100}%`,
+              top: `${(p.top / CANVAS_H) * 100}%`,
+              width: `${(p.width / CANVAS_W) * 100}%`,
+              height: `${(p.height / CANVAS_H) * 100}%`,
+              opacity: p.asset.opacity,
+              transform: p.rotate ? `rotate(${p.rotate}deg)` : undefined,
+              transformOrigin: `${p.originX}px ${p.originY}px`,
+            }}
+          />
+        ))}
+      </>
+    );
+  },
+  (a, b) => a.layer.key === b.layer.key && a.uid === b.uid,
+);
+
 const SlotLayer = memo(function SlotLayer({ layer, stageId, instant, sweepFrom }: { layer: Layer | undefined; stageId: string; instant: boolean; sweepFrom: number | null }) {
   const [items, setItems] = useState<Item[]>(() => (layer ? [{ layer, phase: "idle", n: 0 }] : []));
   const counter = useRef(1);
@@ -57,32 +98,7 @@ const SlotLayer = memo(function SlotLayer({ layer, stageId, instant, sweepFrom }
           ...(phase === "in" ? { ...ENTER_VARS[l.enter], animation: "layer-in 440ms var(--ease-settle) both" } : null),
           ...(phase === "out" ? { animation: "layer-out 320ms var(--ease-atelier) both", pointerEvents: "none" } : null),
         };
-        const content = l.svg ? (
-          <svg viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`} className="absolute inset-0 h-full w-full" aria-hidden="true" data-layer={l.slot}>
-            {l.svg(`${stageId}${l.slot}${n}`)}
-          </svg>
-        ) : (
-          l.assets?.map((p) => (
-            // eslint-disable-next-line @next/next/no-img-element -- positioned layer with physical alignment; already optimised at upload
-            <img
-              key={p.asset.id}
-              src={p.asset.src}
-              alt=""
-              decoding="async"
-              draggable={false}
-              className="absolute max-w-none select-none"
-              style={{
-                left: `${(p.left / CANVAS_W) * 100}%`,
-                top: `${(p.top / CANVAS_H) * 100}%`,
-                width: `${(p.width / CANVAS_W) * 100}%`,
-                height: `${(p.height / CANVAS_H) * 100}%`,
-                opacity: p.asset.opacity,
-                transform: p.rotate ? `rotate(${p.rotate}deg)` : undefined,
-                transformOrigin: `${p.originX}px ${p.originY}px`,
-              }}
-            />
-          ))
-        );
+        const content = <LayerContent layer={l} uid={`${stageId}${l.slot}${n}`} />;
         return (
           <div key={n} className="absolute inset-0" style={style}>
             {l.slot === "seconds" ? (

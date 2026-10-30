@@ -70,6 +70,10 @@ export function Configurator(props: ConfiguratorProps) {
   const name = presentationName(build.dial, build.case, build.family?.complications);
   const query = useMemo(() => encodeConfiguration(config, catalog.components).toString(), [config, catalog.components]);
   const current = STEPS[step];
+  // The panel body renders from a deferred step: the click paints the new header,
+  // track and camera immediately, and the heavier option grid follows without blocking input.
+  const shownStep = useDeferredValue(step);
+  const shown = STEPS[shownStep];
   const view = viewOverride ?? (current.id === "personalize" ? "rear" : "front");
 
   useEffect(() => {
@@ -138,18 +142,13 @@ export function Configurator(props: ConfiguratorProps) {
     [catalog.assets],
   );
 
-  const ctx: StepCtx = {
-    engine,
-    config,
-    evalConfig,
-    build,
-    assets: catalog.assets,
-    pricing,
-    select,
-    preload,
-    setEngraving: (text, style) => setConfig((c) => ({ ...c, engraving: text ? { text, style } : null })),
-    toggleOption: (id) => setConfig((c) => ({ ...c, options: c.options.includes(id) ? c.options.filter((x) => x !== id) : [...c.options, id] })),
-  };
+  const setEngraving = useCallback((text: string, style: "sans" | "serif") => setConfig((c) => ({ ...c, engraving: text ? { text, style } : null })), []);
+  const toggleOption = useCallback((id: string) => setConfig((c) => ({ ...c, options: c.options.includes(id) ? c.options.filter((x) => x !== id) : [...c.options, id] })), []);
+  // Stable context so memoised step panels skip urgent renders (e.g. a step change).
+  const ctx: StepCtx = useMemo(
+    () => ({ engine, config, evalConfig, build, assets: catalog.assets, pricing, select, preload, setEngraving, toggleOption }),
+    [engine, config, evalConfig, build, catalog.assets, pricing, select, preload, setEngraving, toggleOption],
+  );
 
   const goTo = useCallback((i: number) => {
     const next = Math.max(0, Math.min(STEPS.length - 1, i));
@@ -235,7 +234,7 @@ export function Configurator(props: ConfiguratorProps) {
   }
 
   const stepBody = (() => {
-    switch (current.id) {
+    switch (shown.id) {
       case "movement":
         return <MovementStep ctx={ctx} families={catalog.movementFamilies} />;
       case "dial":
@@ -255,7 +254,7 @@ export function Configurator(props: ConfiguratorProps) {
     }
   })();
 
-  const isReview = current.id === "review";
+  const isReview = shown.id === "review";
 
   return (
     <div className="flex h-[calc(100dvh-3.25rem)] flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(400px,460px)]">
@@ -287,6 +286,7 @@ export function Configurator(props: ConfiguratorProps) {
               type="button"
               className={cn("min-h-8 rounded-full border px-3.5 text-[11px] tracking-[0.06em] transition-colors", view === v ? "border-espresso bg-espresso text-ivory" : "border-line bg-ivory/70 text-espresso backdrop-blur hover:border-line-strong")}
               aria-pressed={view === v}
+              aria-label={v === "front" ? "Show the front of the watch" : "Show the back of the watch"}
               onClick={() => setViewOverride(v)}
             >
               {v === "front" ? "Front" : "Back"}
@@ -335,7 +335,7 @@ export function Configurator(props: ConfiguratorProps) {
           )}
         </div>
 
-        <div ref={panelRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 lg:px-8" key={current.id} style={{ animation: "fade-up 360ms var(--ease-settle) both" }}>
+        <div ref={panelRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 lg:px-8" key={shown.id} style={{ animation: "fade-up 360ms var(--ease-settle) both", opacity: shownStep !== step ? 0.55 : undefined }} aria-busy={shownStep !== step}>
           {isReview ? (
             <Review
               build={build}
@@ -378,7 +378,7 @@ export function Configurator(props: ConfiguratorProps) {
                   Back
                 </button>
               )}
-              {!isReview ? (
+              {current.id !== "review" ? (
                 <button type="button" className="btn btn-primary" data-testid="continue" onClick={() => goTo(step + 1)}>
                   {step === STEPS.length - 2 ? "Review" : "Continue"}
                 </button>

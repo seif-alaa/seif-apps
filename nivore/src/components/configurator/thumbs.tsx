@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect, useState, type ReactNode } from "react";
 import type { PreviewAsset } from "@/domain/catalog";
 import { CX, CY, type ResolvedBuild } from "@/components/watch/geometry";
 import { buildLayers, type LayerSlot, type View } from "@/components/watch/layers";
@@ -17,8 +17,9 @@ const CROPS: Record<ThumbKind, { box: [number, number, number, number]; slots: L
   dial: { box: [CX - 152, CY - 152, 304, 304], slots: ["dial"], view: "front" },
   hands: { box: [CX - 152, CY - 152, 304, 304], slots: ["dial", "hands", "seconds"], view: "front" },
   case: { box: [CX - 268, CY - 268, 536, 536], slots: ["shadow", "case", "bezel", "insert", "chapterRing", "dial"], view: "front" },
-  bezel: { box: [CX - 212, CY - 212, 424, 424], slots: ["case", "bezel", "insert", "chapterRing", "dial"], view: "front" },
-  insert: { box: [CX - 200, CY - 200, 400, 400], slots: ["bezel", "insert", "chapterRing", "dial"], view: "front" },
+  // Bezel and insert thumbnails omit the dial: it adds cost without helping the choice.
+  bezel: { box: [CX - 212, CY - 212, 424, 424], slots: ["case", "bezel", "insert"], view: "front" },
+  insert: { box: [CX - 200, CY - 200, 400, 400], slots: ["bezel", "insert"], view: "front" },
   chapterRing: { box: [CX - 168, CY - 168, 336, 336], slots: ["chapterRing", "dial"], view: "front" },
   crystal: { box: [CX - 168, CY - 168, 336, 336], slots: ["chapterRing", "dial", "hands", "crystal"], view: "front" },
   band: { box: [CX - 125, 30, 250, 250], slots: ["band"], view: "front" },
@@ -50,6 +51,49 @@ export const PartThumb = memo(function PartThumb({ build, kind, assets, uid }: {
     </svg>
   );
 });
+
+/**
+ * Progressive mounting: thumbnails show a light swatch first and mount their
+ * SVG a few at a time in idle periods, so opening a step never produces one
+ * long commit that would delay the customer's next tap.
+ */
+const queue: (() => void)[] = [];
+let scheduled = false;
+const idle: (cb: (d: { timeRemaining(): number }) => void) => void =
+  typeof window !== "undefined" && "requestIdleCallback" in window
+    ? (cb) => window.requestIdleCallback(cb, { timeout: 120 })
+    : (cb) => setTimeout(() => cb({ timeRemaining: () => 8 }), 16);
+
+function pump() {
+  scheduled = true;
+  idle((deadline) => {
+    let n = 0;
+    while (queue.length && (n < 2 || deadline.timeRemaining() > 6) && n < 4) {
+      queue.shift()!();
+      n++;
+    }
+    if (queue.length) pump();
+    else scheduled = false;
+  });
+}
+
+export function LazyThumb({ children, swatch }: { children: ReactNode; swatch?: string }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    queue.push(() => alive && setReady(true));
+    if (!scheduled) pump();
+    return () => {
+      alive = false;
+    };
+  }, []);
+  if (ready) return <>{children}</>;
+  return (
+    <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
+      {swatch && <span className="h-[62%] w-[62%] rounded-full opacity-80" style={{ background: swatch }} />}
+    </span>
+  );
+}
 
 /** Complication diagram for movement cards: a tiny dial showing what the movement displays. */
 export function ComplicationGlyph({ complications }: { complications: readonly string[] }) {
