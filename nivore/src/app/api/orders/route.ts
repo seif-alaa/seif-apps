@@ -1,3 +1,4 @@
+import { DATA_DIR } from "@/data/repositories/dev-store";
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -84,7 +85,7 @@ export async function POST(req: Request) {
     const kind = sniff(bytes);
     if (!kind) return json({ error: "Upload a JPG, PNG, WebP or PDF.", fields: { evidence: "JPG, PNG, WebP or PDF only." } }, 422);
     const id = randomUUID();
-    const dir = path.join(process.cwd(), ".data", "evidence");
+    const dir = path.join(DATA_DIR, "evidence");
     await mkdir(dir, { recursive: true });
     await writeFile(path.join(dir, `${id}.${kind.ext}`), bytes);
     evidence.push({ id: `${id}.${kind.ext}`, name: file.name.slice(0, 80), type: kind.type, size: file.size, uploadedAt: new Date().toISOString() });

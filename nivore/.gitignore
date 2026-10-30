@@ -10,3 +10,4 @@ next-env.d.ts
 public/uploads/dev
 test-results
 playwright-report
+.data-e2e

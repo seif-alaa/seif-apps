@@ -40,7 +40,7 @@ interface DevDb {
   counters: { order: number; bidder: number };
 }
 
-const DATA_DIR = path.join(process.cwd(), ".data");
+export const DATA_DIR = process.env.NIVORE_DATA_DIR ? path.resolve(process.env.NIVORE_DATA_DIR) : path.join(process.cwd(), ".data");
 const DB_FILE = path.join(DATA_DIR, "dev-db.json");
 
 function seed(): DevDb {
