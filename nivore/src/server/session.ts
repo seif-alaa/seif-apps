@@ -39,7 +39,7 @@ function key(): Promise<CryptoKey> {
 }
 
 export interface TokenPayload {
-  kind: "admin" | "pass";
+  kind: "admin" | "pass" | "order";
   sub: string;
   exp: number; // epoch seconds
   iat: number;
