@@ -7,7 +7,7 @@ next-env.d.ts
 .env.local
 # Development-only data store and uploads (never production storage)
 .data
+.data-*
 public/uploads/dev
 test-results
 playwright-report
-.data-e2e
