@@ -41,3 +41,25 @@ Draft and validated layers never reach customers. As soon as every visible part 
 
 ## Licensing
 Use only original photography, or photography and renders you hold rights to. Never use another watch company's imagery or logos. Supplier photos usually need written permission.
+
+## Photo layers (v2 pipeline)
+
+`public/parts/` holds 14 photographic layers, each as `name.png` + `name.webp` on a 1024×1024 transparent canvas at **1 mm = 19.5 px**, with the part's true centre (dial axis, hand pivot) at (512, 512). `public/parts/layers.json` records every measurement taken from the source images (diameters, date-window rectangles, pivot-to-tip lengths, strap placement).
+
+| Layer | Size on canvas |
+| --- | --- |
+| `case_C01` | body 42 mm = 819 px wide, lugs vertical, dial aperture centred |
+| `dial_D01…D04` | 28.5 mm = 556 px; date window at 3 o'clock is a real transparent hole |
+| `ring_R01` | outer 30.5 mm = 595 px |
+| `insert_B01` | outer 42 mm = 819 px; opening cut to 31 mm = 605 px |
+| `hands_H01_hour / minute / second` | pivot at centre; tips 166 / 244 / 254 px above it, pointing to 12 |
+| `bracelet_S01, S02`, `strap_S08, S09` | 429 px (22 mm) wide; transparent gap between the two halves |
+
+Regenerate everything after replacing a source image:
+
+```bash
+pip install pillow numpy scipy
+python3 scripts/prepare-parts.py
+```
+
+The script measures edges from the alpha channel (circle fits, hole centroids), never from guesses, and refuses to export a strap that intrudes into its gap. View the result at `/dev/layers` (development only).
