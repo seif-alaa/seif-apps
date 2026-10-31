@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+*.tsbuildinfo
+next-env.d.ts
+.env
+.env.local
+# Development-only data store and uploads (never production storage)
+.data
+.data-*
+public/uploads/dev
+test-results
+playwright-report
+.work
+incoming-images/watches

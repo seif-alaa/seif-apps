@@ -1,0 +1,358 @@
+@import "tailwindcss";
+
+/*
+ * NIVORÉ design tokens — sourced from the Brand Book, Edition 01 (2026).
+ * Primary: Cream (ground), Espresso (ink), Taupe (accent).
+ * Supporting: Ivory, Stone, Mushroom, Champagne (metal/foil accent only), Cocoa.
+ * Usage proportion target: Cream+Ivory ~65%, Espresso ~18%, Taupe ~10%,
+ * Stone/Mushroom ~5%, Champagne ~2%.
+ */
+@theme {
+  --color-cream: #e8e2d6;
+  --color-ivory: #f7f4ee;
+  --color-espresso: #3a322e;
+  --color-taupe: #766a5d;
+  --color-stone: #c5b9a6;
+  --color-mushroom: #a79b8c;
+  --color-champagne: #c2aa83;
+  --color-cocoa: #453b35;
+
+  /* Derived for accessibility (not in the book): taupe darkened so small
+     text on Cream passes WCAG AA (≈5.6:1). Use for captions on cream. */
+  --color-taupe-ink: #5f5549;
+  /* Hairline tones */
+  --color-line: #d3c9b9;
+  --color-line-strong: #a79b8c;
+  /* Functional states, muted to stay inside the palette */
+  --color-ok: #4f6b55;
+  --color-warn: #8a6a2f;
+  --color-err: #8c3b2e;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), ui-serif, Georgia, serif;
+
+  --ease-atelier: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --breakpoint-xs: 26rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    background: var(--color-ivory);
+    color: var(--color-espresso);
+  }
+  body {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.625;
+    font-feature-settings: "cv11", "ss01";
+  }
+  ::selection {
+    background: var(--color-stone);
+    color: var(--color-espresso);
+  }
+  :focus-visible {
+    outline: 1.5px solid var(--color-espresso);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  button,
+  [role="button"],
+  summary {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+}
+
+@layer components {
+  /* Eyebrow / label — Inter Regular, +18% tracking, uppercase */
+  .eyebrow {
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: var(--color-taupe-ink);
+  }
+  /* Collection title — Inter SemiBold, +14% tracking */
+  .collection-title {
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  /* Editorial headline — Newsreader Light */
+  .display {
+    font-family: var(--font-serif);
+    font-weight: 300;
+    letter-spacing: -0.012em;
+    line-height: 1.06;
+  }
+  .serif {
+    font-family: var(--font-serif);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .hairline {
+    border-color: var(--color-line);
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 2.875rem;
+    padding: 0 1.5rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    border-radius: 1px;
+    transition:
+      background-color 220ms var(--ease-atelier),
+      color 220ms var(--ease-atelier),
+      border-color 220ms var(--ease-atelier),
+      transform 120ms var(--ease-atelier);
+    white-space: nowrap;
+    user-select: none;
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(0.985);
+  }
+  .btn-primary {
+    background: var(--color-espresso);
+    color: var(--color-ivory);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-cocoa);
+  }
+  .btn-outline {
+    border-color: var(--color-espresso);
+    color: var(--color-espresso);
+    background: transparent;
+  }
+  .btn-outline:hover:not(:disabled) {
+    background: var(--color-espresso);
+    color: var(--color-ivory);
+  }
+  .btn-ghost {
+    color: var(--color-espresso);
+    padding: 0 0.25rem;
+    min-height: 2.75rem;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    color: var(--color-taupe);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+  }
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 100% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    padding-bottom: 3px;
+    transition: background-size 320ms var(--ease-atelier);
+  }
+  .link-underline:hover {
+    background-size: 0% 1px;
+    background-position: 100% 100%;
+  }
+
+  /* Form fields */
+  .field-label {
+    display: block;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-taupe-ink);
+    margin-bottom: 0.4rem;
+  }
+  .field {
+    width: 100%;
+    min-height: 2.875rem;
+    padding: 0.65rem 0.85rem;
+    background: var(--color-ivory);
+    border: 1px solid var(--color-line);
+    border-radius: 1px;
+    font-size: 1rem; /* 16px avoids iOS zoom on focus */
+    transition: border-color 180ms var(--ease-atelier);
+  }
+  .field:hover {
+    border-color: var(--color-line-strong);
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-espresso);
+  }
+  .field[aria-invalid="true"] {
+    border-color: var(--color-err);
+  }
+  textarea.field {
+    min-height: 7rem;
+    resize: vertical;
+  }
+  select.field {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%233a322e' stroke-width='1.2'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    padding-right: 2.25rem;
+  }
+  .field-error {
+    font-size: 0.8125rem;
+    color: var(--color-err);
+    margin-top: 0.35rem;
+  }
+
+  /* Placeholder photography — Brand Book hatch convention. Always labelled. */
+  .photo-placeholder {
+    position: relative;
+    background-color: #e4ddd0;
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(118, 106, 93, 0.13) 0 1px,
+      transparent 1px 11px
+    );
+    overflow: hidden;
+  }
+
+  /* Chips for filters */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.25rem;
+    padding: 0 0.9rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    border: 1px solid var(--color-line);
+    border-radius: 999px;
+    color: var(--color-espresso);
+    background: transparent;
+    transition:
+      background-color 180ms var(--ease-atelier),
+      border-color 180ms var(--ease-atelier),
+      color 180ms var(--ease-atelier);
+  }
+  .chip:hover {
+    border-color: var(--color-line-strong);
+  }
+  .chip[aria-pressed="true"] {
+    background: var(--color-espresso);
+    color: var(--color-ivory);
+    border-color: var(--color-espresso);
+  }
+}
+
+/* ── Motion ─────────────────────────────────────────────────────────── */
+@keyframes layer-in {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--lx, 0), var(--ly, 0), 0) scale(var(--ls, 1));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes layer-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sweep {
+  from {
+    transform: rotate(var(--from, 0deg));
+  }
+  to {
+    transform: rotate(calc(var(--from, 0deg) + 360deg));
+  }
+}
+@keyframes sheet-up {
+  from {
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes flip-out {
+  from {
+    transform: rotateY(0deg);
+    opacity: 1;
+  }
+  to {
+    transform: rotateY(88deg);
+    opacity: 0.6;
+  }
+}
+@keyframes flip-in {
+  from {
+    transform: rotateY(-88deg);
+    opacity: 0.6;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes light-drift {
+  from {
+    opacity: 0.0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 520ms var(--ease-settle) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

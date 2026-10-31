@@ -1,0 +1,398 @@
+{
+  "canvas": 1024,
+  "pxPerMm": 19.5,
+  "spec": {
+    "case_body_width": 819,
+    "dial_diameter": 556,
+    "ring_outer": 595,
+    "bezel_outer": 819,
+    "bezel_inner": 605,
+    "hour_tip": 166,
+    "minute_tip": 244,
+    "second_tip": 254,
+    "strap_width": 429,
+    "strap_gap": [
+      322,
+      702
+    ]
+  },
+  "parts": {
+    "case_C01": {
+      "bbox": [
+        105,
+        63,
+        957,
+        964
+      ],
+      "png_kb": 731,
+      "webp_kb": 118,
+      "source": "skx_42mm_stainless_case_1024.png",
+      "measuredBodyWidthPx": 820,
+      "scale": 0.9988,
+      "apertureCentre": [
+        512.3,
+        509.6
+      ],
+      "apertureDiameterPx": 566.4,
+      "crownAngleBelow3oclockDeg": 11.2,
+      "clean": {
+        "specksRemoved": 0,
+        "edgePixelsRecoloured": 17947
+      }
+    },
+    "dial_D01": {
+      "bbox": [
+        234,
+        231,
+        790,
+        790
+      ],
+      "png_kb": 430,
+      "webp_kb": 46,
+      "source": "Seiko-Style Black Diver Watch Dial.png",
+      "fittedDiameterSrcPx": 1054.4,
+      "scale": 0.5273,
+      "axisHoleOffsetPx": [
+        0.34,
+        1.21
+      ],
+      "dateWindow": {
+        "x": 687.2,
+        "y": 492.0,
+        "w": 54.8,
+        "h": 40.6
+      },
+      "clean": {
+        "specksRemoved": 0,
+        "edgePixelsRecoloured": 14885
+      }
+    },
+    "dial_D02": {
+      "bbox": [
+        234,
+        233,
+        790,
+        790
+      ],
+      "png_kb": 442,
+      "webp_kb": 56,
+      "source": "Navy Blue Seiko Diver Watch Dial.png",
+      "fittedDiameterSrcPx": 951.2,
+      "scale": 0.5845,
+      "axisHoleOffsetPx": [
+        -0.15,
+        0.51
+      ],
+      "dateWindow": {
+        "x": 684.8,
+        "y": 492.1,
+        "w": 63.1,
+        "h": 43.3
+      },
+      "clean": {
+        "specksRemoved": 0,
+        "edgePixelsRecoloured": 13427
+      }
+    },
+    "dial_D03": {
+      "bbox": [
+        234,
+        234,
+        790,
+        791
+      ],
+      "png_kb": 440,
+      "webp_kb": 57,
+      "source": "Emerald Seiko Diver Dial.png",
+      "fittedDiameterSrcPx": 1051.3,
+      "scale": 0.5289,
+      "axisHoleOffsetPx": [
+        0.01,
+        -0.05
+      ],
+      "dateWindow": {
+        "x": 689.9,
+        "y": 493.2,
+        "w": 53.4,
+        "h": 37.0
+      },
+      "clean": {
+        "specksRemoved": 6,
+        "edgePixelsRecoloured": 15428
+      }
+    },
+    "dial_D04": {
+      "bbox": [
+        233,
+        235,
+        790,
+        788
+      ],
+      "png_kb": 457,
+      "webp_kb": 58,
+      "source": "Seiko Silver Sunburst Watch Dial.png",
+      "fittedDiameterSrcPx": 1126.1,
+      "scale": 0.4938,
+      "axisHoleOffsetPx": [
+        0.02,
+        -0.11
+      ],
+      "dateWindow": {
+        "x": 684.5,
+        "y": 495.3,
+        "w": 50.4,
+        "h": 35.1
+      },
+      "clean": {
+        "specksRemoved": 9,
+        "edgePixelsRecoloured": 15924
+      }
+    },
+    "hands_H01_hour": {
+      "bbox": [
+        482,
+        346,
+        540,
+        532
+      ],
+      "png_kb": 24,
+      "webp_kb": 7,
+      "source": "Centered Mercedes-Style Watch Hand.png",
+      "pivotToTipSrcPx": 715.6,
+      "scale": 0.232,
+      "tiltCorrectedDeg": 0,
+      "tipPx": 166,
+      "clean": {
+        "specksRemoved": 9,
+        "edgePixelsRecoloured": 8613
+      }
+    },
+    "hands_H01_minute": {
+      "bbox": [
+        491,
+        268,
+        532,
+        532
+      ],
+      "png_kb": 24,
+      "webp_kb": 7,
+      "source": "Centered Silver Watch Hand with Luminous Inlay.png",
+      "pivotToTipSrcPx": 852.7,
+      "scale": 0.2861,
+      "tiltCorrectedDeg": 0,
+      "tipPx": 244,
+      "clean": {
+        "specksRemoved": 0,
+        "edgePixelsRecoloured": 8711
+      }
+    },
+    "hands_H01_second": {
+      "bbox": [
+        499,
+        258,
+        524,
+        614
+      ],
+      "png_kb": 18,
+      "webp_kb": 8,
+      "source": "Centered Polished Watch Seconds Hand.png",
+      "pivotToTipSrcPx": 715.1,
+      "scale": 0.3552,
+      "tiltCorrectedDeg": 0,
+      "tipPx": 254,
+      "clean": {
+        "specksRemoved": 0,
+        "edgePixelsRecoloured": 9521
+      }
+    },
+    "ring_R01": {
+      "bbox": [
+        214,
+        216,
+        810,
+        809
+      ],
+      "png_kb": 187,
+      "webp_kb": 43,
+      "source": "Brushed Steel Watch Minute Track Ring.png",
+      "scale": 0.5166,
+      "outerCentreVsInnerCentreSrcPx": [
+        0.01,
+        1.47
+      ],
+      "innerDiameterPx": 517.6,
+      "clean": {
+        "specksRemoved": 37,
+        "edgePixelsRecoloured": 25588
+      }
+    },
+    "insert_B01": {
+      "bbox": [
+        102,
+        108,
+        921,
+        916
+      ],
+      "png_kb": 459,
+      "webp_kb": 73,
+      "source": "Bare Steel Dive Watch Case and Bezel.png (right-hand object)",
+      "scale": 1.0924,
+      "originalInnerDiameterAtSpecScalePx": 564.6,
+      "innerOpeningCutToPx": 605,
+      "trimmedPx": 20.2,
+      "clean": {
+        "specksRemoved": 5,
+        "edgePixelsRecoloured": 16804
+      }
+    },
+    "bracelet_S02": {
+      "bbox": [
+        293,
+        0,
+        732,
+        1023
+      ],
+      "png_kb": 366,
+      "webp_kb": 46,
+      "source": "Stainless Steel Watch Bracelet Cutout.png",
+      "pieces": {
+        "top": {
+          "scale": 1.273,
+          "srcBodyWidthPx": 337.0,
+          "upscale": 1.27
+        },
+        "bottom": {
+          "scale": 1.269,
+          "srcBodyWidthPx": 338.0,
+          "upscale": 1.27
+        },
+        "gapLeakClipped": 20
+      },
+      "gap": [
+        322,
+        702
+      ],
+      "clean": {
+        "specksRemoved": 0,
+        "edgePixelsRecoloured": 12862
+      }
+    },
+    "bracelet_S01": {
+      "bbox": [
+        292,
+        0,
+        732,
+        1023
+      ],
+      "png_kb": 389,
+      "webp_kb": 60,
+      "source": "Stainless Steel Jubilee Bracelet Split View.png",
+      "pieces": {
+        "top": {
+          "scale": 1.247,
+          "srcBodyWidthPx": 344.0,
+          "upscale": 1.25
+        },
+        "bottom": {
+          "scale": 1.258,
+          "srcBodyWidthPx": 341.0,
+          "upscale": 1.26
+        },
+        "gapLeakClipped": 17
+      },
+      "gap": [
+        322,
+        702
+      ],
+      "clean": {
+        "specksRemoved": 3,
+        "edgePixelsRecoloured": 22385
+      }
+    },
+    "strap_S08": {
+      "bbox": [
+        264,
+        0,
+        760,
+        1023
+      ],
+      "png_kb": 343,
+      "webp_kb": 35,
+      "source": "Disassembled Black Dive Watch Strap.png",
+      "pieces": {
+        "top": {
+          "scale": 1.803,
+          "srcBodyWidthPx": 238.0,
+          "upscale": 1.8
+        },
+        "bottom": {
+          "scale": 1.803,
+          "srcBodyWidthPx": 238.0,
+          "upscale": 1.8
+        },
+        "gapLeakClipped": 46
+      },
+      "gap": [
+        322,
+        702
+      ],
+      "clean": {
+        "specksRemoved": 8,
+        "edgePixelsRecoloured": 17544
+      }
+    },
+    "strap_S09": {
+      "bbox": [
+        263,
+        0,
+        762,
+        1023
+      ],
+      "png_kb": 463,
+      "webp_kb": 61,
+      "source": "Vintage Brown Leather Watch Strap Set.png",
+      "pieces": {
+        "top": {
+          "scale": 2.538,
+          "srcBodyWidthPx": 169.0,
+          "upscale": 2.54
+        },
+        "bottom": {
+          "scale": 2.6,
+          "srcBodyWidthPx": 165.0,
+          "upscale": 2.6
+        },
+        "gapLeakClipped": 58
+      },
+      "gap": [
+        322,
+        702
+      ],
+      "clean": {
+        "specksRemoved": 22,
+        "edgePixelsRecoloured": 15084
+      }
+    }
+  },
+  "notes": [],
+  "products": {
+    "product_red-black-gmt": {
+      "source": "Seiko GMT on the Watchmaker#U2019s Bench.png",
+      "size": [
+        1122,
+        1402
+      ],
+      "jpg_kb": 299,
+      "webp_kb": 188
+    },
+    "product_baby-blue": {
+      "source": "Seiko Watch on a Watchmaker#U2019s Workbench.png",
+      "size": [
+        1122,
+        1402
+      ],
+      "jpg_kb": 286,
+      "webp_kb": 173
+    }
+  }
+}
