@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useBag } from "@/lib/cart";
 
-export function AddToBag({ productId, name, detail, priceMinor, available, maxQuantity }: { productId: string; name: string; detail: string; priceMinor: number; available: boolean; maxQuantity: number }) {
+export function AddToBag({ productId, name, detail, image, priceMinor, available, unavailableLabel = "Sold", maxQuantity }: { productId: string; name: string; detail: string; image?: string; priceMinor: number; available: boolean; unavailableLabel?: string; maxQuantity: number }) {
   const add = useBag((s) => s.add);
   const hydrate = useBag((s) => s.hydrate);
   const [added, setAdded] = useState(false);
@@ -12,7 +12,7 @@ export function AddToBag({ productId, name, detail, priceMinor, available, maxQu
   if (!available) {
     return (
       <button type="button" className="btn btn-primary w-full" disabled>
-        Sold
+        {unavailableLabel}
       </button>
     );
   }
@@ -23,7 +23,7 @@ export function AddToBag({ productId, name, detail, priceMinor, available, maxQu
         className="btn btn-primary w-full"
         data-testid="pdp-add"
         onClick={() => {
-          add({ kind: "catalog", productId, name, detail, quantity: 1, displayMinor: priceMinor });
+          add({ kind: "catalog", productId, name, detail, image, quantity: 1, displayMinor: priceMinor });
           setAdded(true);
         }}
       >

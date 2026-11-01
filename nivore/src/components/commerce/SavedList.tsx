@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { LayerStack } from "@/components/builder/stack";
 import { formatEGP } from "@/domain/money";
 import { cn } from "@/lib/cn";
 import { useSaved } from "@/lib/saved";
@@ -30,9 +31,8 @@ export function SavedList() {
         {designs.map((d) => (
           <li key={d.ref} className={cn("group", compare.includes(d.ref) && "outline outline-1 outline-offset-8 outline-espresso")}>
             <Link href={`/build?${d.query}`} className="block">
-              <div className="relative aspect-[600/860] bg-cream">
-                {/* eslint-disable-next-line @next/next/no-img-element -- server-rendered SVG */}
-                <img src={`/api/render?${d.query}`} alt={`${d.name}, illustrative`} className="absolute inset-[4%] h-[92%] w-[92%]" loading="lazy" />
+              <div className="relative aspect-square bg-cream">
+                <LayerStack layers={d.layers} alt={`${d.name}, illustrative`} className="absolute inset-[3%] h-[94%] w-[94%]" />
               </div>
               <p className="mt-3 text-[14px]">{d.name}</p>
               <p className="tabular text-[12px] tracking-[0.06em] text-taupe-ink">{d.ref} · {formatEGP(d.totalMinorAtSave)}</p>
@@ -52,9 +52,8 @@ export function SavedList() {
           <div className="mt-6 grid grid-cols-2 gap-6">
             {chosen.map((d) => (
               <div key={d.ref}>
-                <div className="relative mx-auto aspect-[600/860] max-w-[260px] bg-cream">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- server-rendered SVG */}
-                  <img src={`/api/render?${d.query}`} alt="" className="absolute inset-0 h-full w-full" />
+                <div className="relative mx-auto aspect-square max-w-[300px] bg-cream">
+                  <LayerStack layers={d.layers} alt="" className="absolute inset-0 h-full w-full" />
                 </div>
                 <p className="mt-3 text-center text-[14px]">{d.name}</p>
                 <p className="tabular text-center text-[13px] text-taupe-ink">{formatEGP(d.totalMinorAtSave)}</p>

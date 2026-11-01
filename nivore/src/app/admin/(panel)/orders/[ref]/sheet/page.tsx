@@ -1,5 +1,8 @@
 import { notFound } from "next/navigation";
 import { Monogram, Wordmark } from "@/components/brand/Brand";
+import { LayerStack } from "@/components/builder/stack";
+import { decodeBuild, layersOf } from "@/lib/parts";
+import { getPartsCatalog } from "@/server/parts";
 import { PrintButton } from "@/components/admin/PrintButton";
 import { repos } from "@/data/repositories";
 import { formatEGP } from "@/domain/money";
@@ -29,12 +32,14 @@ export default async function Sheet({ params }: { params: Promise<{ ref: string 
                   <dd>{c.name} <span className="font-mono text-[11px] text-taupe-ink">{c.sku}</span></dd>
                 </div>
               ))}
-              {item.engraving && <div className="border-b border-line pb-1.5"><dt className="eyebrow">Engraving</dt><dd>“{item.engraving.text}” ({item.engraving.style})</dd></div>}
               <div className="border-b border-line pb-1.5"><dt className="eyebrow">Assembled by</dt><dd>&nbsp;</dd></div>
               <div className="border-b border-line pb-1.5"><dt className="eyebrow">Date</dt><dd>&nbsp;</dd></div>
             </dl>
-            {/* eslint-disable-next-line @next/next/no-img-element -- server-rendered SVG */}
-            {item.encoded && <img src={`/api/render?${item.encoded}`} alt="" className="w-full" />}
+            {(() => {
+              const parts = getPartsCatalog();
+              const build = decodeBuild(parts, item.encoded);
+              return build ? <LayerStack layers={layersOf(parts, build)} alt="" className="w-full" /> : null;
+            })()}
           </div>
           <div className="mt-10 flex items-end justify-between gap-8">
             <p className="max-w-md text-[10.5px] leading-relaxed text-taupe-ink">A record of the components chosen for this timepiece. NIVORÉ is an independent atelier; third-party parts are named as supplied by their makers.</p>

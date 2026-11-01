@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MinuteTrack, Monogram, PhotoPlaceholder } from "@/components/brand/Brand";
-import { getContent } from "@/server/catalog";
+import Image from "next/image";
+import { MinuteTrack, Monogram } from "@/components/brand/Brand";
+import { getContent, getVisibleProducts } from "@/server/catalog";
 
 export const metadata: Metadata = { title: "The Atelier", description: "An independent watch atelier in Egypt, composing automatic watches one at a time." };
 
 export default async function AtelierPage() {
-  const c = await getContent();
+  const [c, products] = await Promise.all([getContent(), getVisibleProducts()]);
+  const photo = products.flatMap((p) => p.images)[1];
   return (
     <>
       <section className="bg-espresso text-ivory">
@@ -24,7 +26,11 @@ export default async function AtelierPage() {
             </p>
           ))}
         </div>
-        <PhotoPlaceholder label="hands fitting a strap" className="aspect-[4/5] w-full" />
+        {photo && (
+          <div className="relative aspect-[4/5] w-full overflow-hidden bg-cream">
+            <Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 1024px) 45vw, 90vw" className="object-cover" />
+          </div>
+        )}
       </section>
       <section className="bg-cream">
         <div className="mx-auto max-w-[1440px] px-5 py-24 md:px-10">

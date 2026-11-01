@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { GOVERNORATES } from "./egypt";
-import { ConfigurationSchema, EngravingSchema } from "./configuration";
 import type { QuoteLine } from "./pricing";
 
 /* ── Products (completed NIVORÉ builds) ───────────────────────────────── */
@@ -17,8 +16,8 @@ export const ProductSchema = z.object({
   collectionIds: z.array(z.string()),
   priceMinor: z.number().int().nonnegative(),
   compareAtMinor: z.number().int().nonnegative().nullable(),
-  /** Component configuration this piece is built from (drives specs and preview). */
-  configuration: ConfigurationSchema,
+  /** Movement as shown to customers, e.g. "NH35 automatic". */
+  movement: z.string().max(80),
   images: z.array(z.object({ src: z.string(), alt: z.string(), width: z.number().int(), height: z.number().int() })),
   extraSpecs: z.array(z.object({ label: z.string().max(40), value: z.string().max(120) })),
   stockQuantity: z.number().int().nonnegative(),
@@ -26,7 +25,6 @@ export const ProductSchema = z.object({
   releaseAt: z.string().nullable(),
   featured: z.boolean(),
   soldOut: z.boolean(),
-  allowCustomization: z.boolean(),
   maxPerOrder: z.number().int().min(1).max(10),
   seo: z.object({ title: z.string().max(70), description: z.string().max(170) }),
   sortOrder: z.number().int(),
@@ -130,13 +128,12 @@ export interface OrderItem {
   kind: "custom" | "catalog";
   name: string;
   buildRef: string | null;
-  encoded: string | null; // share-URL query for custom builds
+  encoded: string | null; // share-link value for custom builds (see lib/parts encodeBuild)
   productId: string | null;
   quantity: number;
   unitMinor: number;
   lines: QuoteLine[];
   components: ComponentSnapshot[];
-  engraving: z.infer<typeof EngravingSchema> | null;
 }
 
 export interface StatusEvent {
@@ -196,8 +193,17 @@ export interface Order {
 
 /* ── Checkout input (shared by client form and server route) ─────────── */
 
+export const PhotoBuildSchema = z.object({
+  family: z.string().max(12),
+  case: z.string().max(60),
+  bezel: z.string().max(60),
+  dial: z.string().max(60),
+  hands: z.string().max(60),
+  band: z.string().max(60),
+});
+
 export const CheckoutItemSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("custom"), configuration: ConfigurationSchema, quantity: z.number().int().min(1).max(10) }),
+  z.object({ kind: z.literal("custom"), build: PhotoBuildSchema, quantity: z.number().int().min(1).max(10) }),
   z.object({ kind: z.literal("catalog"), productId: z.string().min(1), quantity: z.number().int().min(1).max(10) }),
 ]);
 export type CheckoutItem = z.infer<typeof CheckoutItemSchema>;

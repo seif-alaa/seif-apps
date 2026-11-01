@@ -6,11 +6,11 @@ import type { BagItem } from "@/lib/cart";
 export interface QuoteResponse {
   ok: boolean;
   totals: { subtotalMinor: number; discountMinor: number; discountLabel: string | null; shippingMinor: number | null; taxMinor: number; totalMinor: number; promoError: string | null };
-  lines: { index: number; ok: boolean; error: string | null; name: string; detail: string; quantity: number; unitMinor: number; buildRef: string | null; encoded: string | null; lines: { key: string; label: string; name: string; amountMinor: number }[]; leadTimeDays: number | null }[];
+  lines: { index: number; ok: boolean; error: string | null; name: string; detail: string; quantity: number; unitMinor: number; buildRef: string | null; lines: { key: string; label: string; name: string; amountMinor: number }[] }[];
 }
 
 export function toCheckoutItems(items: BagItem[]) {
-  return items.map((i) => (i.kind === "custom" ? { kind: "custom" as const, configuration: i.configuration!, quantity: i.quantity } : { kind: "catalog" as const, productId: i.productId!, quantity: i.quantity }));
+  return items.map((i) => (i.kind === "custom" ? { kind: "custom" as const, build: i.build!, quantity: i.quantity } : { kind: "catalog" as const, productId: i.productId!, quantity: i.quantity }));
 }
 
 /** Server-authoritative price for the bag; debounced, cancels stale requests. */

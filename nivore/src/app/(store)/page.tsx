@@ -1,49 +1,44 @@
-import Link from "next/link";
 import Image from "next/image";
-import { IndexNumeral, MinuteTrack, Monogram, PhotoPlaceholder } from "@/components/brand/Brand";
+import Link from "next/link";
+import { IndexNumeral, MinuteTrack, Monogram } from "@/components/brand/Brand";
+import { LayerStack } from "@/components/builder/stack";
 import { DialTeaser } from "@/components/home/DialTeaser";
-import { ProductCard } from "@/components/shop/ProductCard";
-import { resolveBuild } from "@/components/watch/geometry";
-import { buildLayers, StaticWatch } from "@/components/watch/layers";
+import { PREVIEW_CAPTION, ProductCard, ProductGrid } from "@/components/shop/ProductCard";
 import { repos } from "@/data/repositories";
 import { auctionStatus, minimumNextBid, PUBLIC_STATUS_LABEL } from "@/domain/auction";
-import { decodeConfiguration, encodeConfiguration } from "@/domain/configuration";
 import { formatEGP } from "@/domain/money";
-import { getContent, getEngine, getPublicCatalog, getVisibleProducts } from "@/server/catalog";
-import { productView } from "@/server/views";
+import { decodeBuild, defaultBuild, encodeBuild, layersOf } from "@/lib/parts";
+import { getContent, getVisibleProducts } from "@/server/catalog";
+import { getPartsCatalog } from "@/server/parts";
+
+const SWATCH: Record<string, string> = { black: "#1d1b1a", silver: "#c9c9c9", emerald: "#1f6b4a", navy: "#1c2a50" };
 
 export default async function HomePage() {
-  const [content, products, engine, catalog] = await Promise.all([getContent(), getVisibleProducts(), getEngine(), getPublicCatalog()]);
+  const [content, products] = await Promise.all([getContent(), getVisibleProducts()]);
+  const parts = getPartsCatalog();
   const featured = content.featuredProductIds.map((id) => products.find((p) => p.id === id)).filter((p) => p != null).slice(0, 3);
-  const hero = featured[0] ?? products[0];
-  const heroBuild = hero ? resolveBuild(hero.configuration, engine.get, engine.family) : null;
+  const photos = products.flatMap((p) => p.images);
 
-  // Builder teaser: the hero build with four alternative dials, all pre-rendered here.
-  const teaserDials = ["dial-ivory-date", "dial-teal-explorer", "dial-cognac-roman", "dial-rose-linen"];
-  const teaserBase = products.find((p) => p.slug === "alba-36-ivory") ?? hero;
-  const teaser = teaserBase
-    ? teaserDials
-        .map((id) => {
-          const proposal = engine.propose(teaserBase.configuration, "dial", id);
-          if (proposal.blocked.length || !engine.validate(proposal.next).ok) return null;
-          const b = resolveBuild(proposal.next, engine.get, engine.family);
-          const d = b.dial!;
-          return {
-            id,
-            label: d.spec.colorName,
-            swatch: d.spec.colorHex,
-            query: encodeConfiguration(proposal.next, catalog.components).toString(),
-            // eslint-disable-next-line @next/next/no-img-element -- cacheable vector render, lazy below the fold
-            node: <img src={`/api/render?${encodeConfiguration(proposal.next, catalog.components).toString()}`} alt={`${d.spec.colorName} dial, illustrative`} width={600} height={860} loading="lazy" decoding="async" className="h-full w-full" />,
-          };
-        })
-        .filter((v) => v != null)
+  // Builder teaser: the first live family with each of its dials, rendered from the real photo layers.
+  const family = parts.families.find((f) => f.live);
+  const teaser = family
+    ? family.dial.map((id) => {
+        const b = { ...defaultBuild(family), dial: id };
+        const colour = parts.parts[id].label.split(" · ").pop() ?? "";
+        return {
+          id,
+          label: colour.charAt(0).toUpperCase() + colour.slice(1),
+          swatch: SWATCH[colour.toLowerCase()] ?? "#8a8178",
+          query: `b=${encodeBuild(b)}`,
+          node: <LayerStack layers={layersOf(parts, b)} alt={`${family.name} with a ${colour} dial, illustrative`} className="h-full w-full" />,
+        };
+      })
     : [];
 
   const auctions = await repos().auctions.list();
   const auction = auctions.find((a) => a.id === content.featuredAuctionId && a.published && !a.archived);
   const now = new Date();
-  const auctionConfig = auction?.previewBuild ? decodeConfiguration(new URLSearchParams(auction.previewBuild), catalog.components) : null;
+  const auctionBuild = decodeBuild(parts, auction?.previewBuild);
 
   return (
     <>
@@ -67,21 +62,13 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="order-1 lg:order-2">
-            {content.hero.image ? (
-              <div className="relative mx-auto aspect-[4/5] w-full max-w-[560px]">
-                <Image src={content.hero.image} alt={content.hero.imageAlt} fill priority sizes="(min-width: 1024px) 45vw, 90vw" className="object-cover" />
-              </div>
-            ) : (
-              heroBuild && (
-                <div className="relative mx-auto aspect-[600/860] w-[68%] max-w-[440px] sm:w-[52%] lg:w-[78%]">
-                  <StaticWatch layers={buildLayers(heroBuild, "front", catalog.assets)} idPrefix="hero" className="h-full w-full" title={`${hero!.name} ${hero!.dialLabel}, illustrative rendering`} />
+            {content.hero.image && (
+              <>
+                <div className="relative mx-auto aspect-[4/5] w-full max-w-[560px]">
+                  <Image src={content.hero.image} alt={content.hero.imageAlt} fill priority sizes="(min-width: 1024px) 45vw, 90vw" className="object-cover" />
                 </div>
-              )
-            )}
-            {hero && !content.hero.image && (
-              <p className="mt-2 text-center text-[11px] tracking-[0.06em] text-taupe-ink">
-                <span className="collection-title">{hero.name}</span> · {hero.dialLabel} — illustrative rendering
-              </p>
+                <p className="mx-auto mt-2 max-w-[560px] text-[11px] tracking-[0.04em] text-taupe-ink">{PREVIEW_CAPTION}</p>
+              </>
             )}
           </div>
         </div>
@@ -90,7 +77,11 @@ export default async function HomePage() {
 
       {/* ── Introduction ─────────────────────────────────────── */}
       <section className="mx-auto grid max-w-[1440px] gap-12 px-5 py-24 md:px-10 lg:grid-cols-[0.8fr_1.2fr] lg:py-32">
-        <PhotoPlaceholder label="atelier bench, watch components, soft daylight" className="aspect-[3/4] w-full max-w-md" />
+        {photos[0] && (
+          <div className="relative aspect-[3/4] w-full max-w-md overflow-hidden bg-cream">
+            <Image src={photos[0].src} alt={photos[0].alt} fill sizes="(min-width: 1024px) 30vw, 90vw" className="object-cover" />
+          </div>
+        )}
         <div className="lg:pt-10">
           <h2 className="display max-w-2xl text-[2.6rem] md:text-[3.6rem]">{content.intro.headline}</h2>
           <div className="mt-10 grid gap-8 md:grid-cols-2">
@@ -111,13 +102,13 @@ export default async function HomePage() {
             All timepieces
           </Link>
         </div>
-        <ul className="mt-10 grid gap-x-6 gap-y-12 xs:grid-cols-2 lg:grid-cols-3">
-          {featured.map((p) => (
-            <li key={p.id}>
-              <ProductCard product={p} query={productView(p, engine).query} caliber={productView(p, engine).caliber} />
-            </li>
-          ))}
-        </ul>
+        <div className="mt-10">
+          <ProductGrid>
+            {featured.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </ProductGrid>
+        </div>
       </section>
 
       {/* ── Builder teaser ───────────────────────────────────── */}
@@ -147,11 +138,8 @@ export default async function HomePage() {
       {auction && (
         <section className="bg-espresso text-ivory">
           <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 py-20 md:px-10 lg:grid-cols-2 lg:py-28">
-            <div className="relative mx-auto aspect-[600/860] w-[60%] max-w-[360px]">
-              {auctionConfig && (
-                // eslint-disable-next-line @next/next/no-img-element -- cacheable vector render, lazy below the fold
-                <img src={`/api/render?${encodeConfiguration(auctionConfig, catalog.components).toString()}`} alt={`${auction.title}, illustrative rendering`} width={600} height={860} loading="lazy" decoding="async" className="h-full w-full" />
-              )}
+            <div className="relative mx-auto aspect-square w-[78%] max-w-[420px]">
+              {auctionBuild && <LayerStack layers={layersOf(parts, auctionBuild)} alt={`${auction!.title}, illustrative rendering`} className="h-full w-full" />}
             </div>
             <div>
               <p className="eyebrow !text-stone">Rare pieces · {PUBLIC_STATUS_LABEL[auctionStatus(auction, now)]}</p>
@@ -194,25 +182,20 @@ export default async function HomePage() {
             ))}
           </dl>
         </div>
-        <PhotoPlaceholder label="dial macro, brushed and polished case" className="aspect-[4/5] w-full" />
+        {photos[2] && (
+          <div className="relative aspect-[4/5] w-full overflow-hidden bg-cream">
+            <Image src={photos[2].src} alt={photos[2].alt} fill sizes="(min-width: 1024px) 35vw, 90vw" className="origin-[50%_54%] scale-[1.9] object-cover" />
+          </div>
+        )}
       </section>
 
       {/* ── Packaging ────────────────────────────────────────── */}
       <section className="bg-stone/45">
-        <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 py-20 md:px-10 lg:grid-cols-2 lg:py-24">
-          {content.packaging.image ? (
-            <div className="relative aspect-[4/3] w-full">
-              <Image src={content.packaging.image} alt="NIVORÉ presentation box" fill sizes="(min-width: 1024px) 45vw, 90vw" className="object-cover" />
-            </div>
-          ) : (
-            <PhotoPlaceholder label="presentation box, lid ajar, ivory sleeve" className="aspect-[4/3] w-full" />
-          )}
-          <div>
-            <Monogram size={46} className="text-taupe" />
-            <h2 className="display mt-6 text-[2.4rem] md:text-[3rem]">{content.packaging.headline}</h2>
-            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-taupe-ink">{content.packaging.body}</p>
-            <p className="serif mt-6 text-lg italic">Handle with care. Open slowly.</p>
-          </div>
+        <div className="mx-auto max-w-3xl px-5 py-20 text-center md:px-10 lg:py-24">
+          <Monogram size={46} className="mx-auto text-taupe" />
+          <h2 className="display mt-6 text-[2.4rem] md:text-[3rem]">{content.packaging.headline}</h2>
+          <p className="mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-taupe-ink">{content.packaging.body}</p>
+          <p className="serif mt-6 text-lg italic">Handle with care. Open slowly.</p>
         </div>
       </section>
 

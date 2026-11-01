@@ -1,7 +1,4 @@
 import { z } from "zod";
-import { effectivePrice, type PublicComponent } from "./catalog";
-import type { Engine } from "./compatibility";
-import { SLOT_ORDER, SLOT_LABEL, type Configuration, type Slot } from "./configuration";
 import { assertMinor, percentOf, sumMinor, type Minor } from "./money";
 
 /* ── Admin-controlled pricing settings ────────────────────────────────── */
@@ -72,80 +69,6 @@ export interface QuoteLine {
   discountEligible: boolean;
   componentId?: string;
   sku?: string;
-}
-
-export interface Availability {
-  status: "available" | "made_to_order" | "unavailable";
-  /** Longest component lead time in days, if any part is made to order. */
-  leadTimeDays: number | null;
-  notes: string[];
-}
-
-export interface BuildQuote {
-  lines: QuoteLine[];
-  totalMinor: Minor;
-  discountableMinor: Minor;
-  availability: Availability;
-}
-
-export function quoteBuild(config: Configuration, engine: Engine, pricing: PricingSettings): BuildQuote {
-  const lines: QuoteLine[] = [];
-  const notes: string[] = [];
-  let leadTimeDays: number | null = null;
-  let status: Availability["status"] = "available";
-
-  for (const slot of SLOT_ORDER) {
-    const c = engine.get(config.parts[slot]) as PublicComponent | undefined;
-    if (!c || !engine.applicable(config, slot)) continue;
-    lines.push({
-      key: slot,
-      label: SLOT_LABEL[slot as Slot],
-      name: c.name,
-      amountMinor: assertMinor(effectivePrice(c)),
-      discountEligible: c.discountEligible,
-      componentId: c.id,
-      sku: c.sku,
-    });
-    if (c.stock.status === "out_of_stock" || !c.active) {
-      status = "unavailable";
-      notes.push(`${c.name} is currently unavailable.`);
-    } else if (c.stock.status === "made_to_order") {
-      if (status === "available") status = "made_to_order";
-      if (c.stock.leadTimeDays != null) leadTimeDays = Math.max(leadTimeDays ?? 0, c.stock.leadTimeDays);
-      notes.push(`${c.name} is ordered in for your build.`);
-    }
-  }
-
-  lines.push({
-    key: "assembly",
-    label: "Assembly",
-    name: "Atelier assembly and regulation check",
-    amountMinor: pricing.assemblyMinor,
-    discountEligible: false,
-  });
-
-  if (config.engraving?.text && pricing.engraving.enabled) {
-    lines.push({
-      key: "engraving",
-      label: "Engraving",
-      name: `Caseback engraving · ${config.engraving.text.length} characters`,
-      amountMinor: pricing.engraving.priceMinor,
-      discountEligible: false,
-    });
-  }
-  for (const optionId of config.options) {
-    const option = pricing.options.find((o) => o.id === optionId && o.enabled);
-    if (option) {
-      lines.push({ key: `option:${option.id}`, label: "Option", name: option.name, amountMinor: option.priceMinor, discountEligible: false });
-    }
-  }
-
-  return {
-    lines,
-    totalMinor: sumMinor(lines.map((l) => l.amountMinor)),
-    discountableMinor: sumMinor(lines.filter((l) => l.discountEligible).map((l) => l.amountMinor)),
-    availability: { status, leadTimeDays, notes },
-  };
 }
 
 /* ── Cart / order totals ───────────────────────────────────────────────── */

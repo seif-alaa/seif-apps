@@ -9,11 +9,11 @@ import { computeMetrics } from "@/server/analytics";
 
 export default async function Overview() {
   const r = repos();
-  const [orders, catalog, auctions, inquiries, settings, waitlist, customers] = await Promise.all([r.orders.list(), r.catalog.get(), r.auctions.list(), r.misc.inquiries(), r.settings.get(), r.misc.waitlist(), r.customers.list()]);
+  const [orders, auctions, inquiries, settings, waitlist, customers] = await Promise.all([r.orders.list(), r.auctions.list(), r.misc.inquiries(), r.settings.get(), r.misc.waitlist(), r.customers.list()]);
   const now = new Date();
   const all = computeMetrics(orders, { from: new Date(0), to: now });
   const month = computeMetrics(orders, { from: new Date(now.getTime() - 30 * 86_400_000), to: now });
-  const lowStock = catalog.components.filter((c) => c.active && (c.stock.status === "low" || c.stock.status === "out_of_stock"));
+  const lowStock = (await r.products.list()).filter((p) => p.status === "active" && (p.soldOut || p.stockQuantity < 1));
   const activeAuctions = auctions.filter((a) => a.published && !a.archived && auctionStatus(a, now) === "open");
   const awaitingWinnerPay = auctions.filter((a) => a.adminStatus === "pending_payment" && !a.winner?.paymentConfirmedAt);
   const needsAction = orders.filter((o) => ["received", "payment_under_review", "awaiting_payment"].includes(o.status));
@@ -58,18 +58,18 @@ export default async function Overview() {
           )}
         </Card>
 
-        <Card title="Inventory alerts" action={<Link href="/admin/components?stock=alert" className="text-[12px] underline">Components</Link>}>
+        <Card title="Inventory alerts" action={<Link href="/admin/products" className="text-[12px] underline">Products</Link>}>
           {lowStock.length ? (
             <ul className="divide-y divide-line text-[13.5px]">
-              {lowStock.slice(0, 10).map((c) => (
-                <li key={c.id} className="flex items-center justify-between gap-3 py-2">
-                  <Link href={`/admin/components/${c.id}`} className="hover:underline">{c.name}</Link>
-                  <Pill tone={c.stock.status === "out_of_stock" ? "err" : "warn"}>{c.stock.status === "out_of_stock" ? "Out of stock" : `Low · ${c.stock.quantity ?? "?"}`}</Pill>
+              {lowStock.slice(0, 10).map((p) => (
+                <li key={p.id} className="flex items-center justify-between gap-3 py-2">
+                  <Link href={`/admin/products/${p.id}`} className="hover:underline">{p.name}</Link>
+                  <Pill tone="err">Sold out</Pill>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-[13px] text-taupe-ink">All active components are stocked.</p>
+            <p className="text-[13px] text-taupe-ink">All active pieces are in stock.</p>
           )}
         </Card>
 

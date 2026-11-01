@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { Configuration } from "@/domain/configuration";
+import type { Layers, PhotoBuild } from "@/lib/parts";
 import { readLocal, writeLocal } from "./storage";
 
 /**
@@ -12,7 +12,11 @@ import { readLocal, writeLocal } from "./storage";
 export interface BagItem {
   id: string;
   kind: "custom" | "catalog";
-  configuration?: Configuration;
+  build?: PhotoBuild;
+  /** Part ids per layer, kept so the bag can draw a thumbnail without a server round trip. */
+  layers?: Layers;
+  /** Product photo for catalogue pieces. */
+  image?: string;
   productId?: string;
   name: string;
   detail: string;

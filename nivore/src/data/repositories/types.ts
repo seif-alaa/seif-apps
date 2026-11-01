@@ -1,5 +1,4 @@
 import type { Auction, Bid } from "@/domain/auction";
-import type { Catalog, CompatRecord, Component, MovementFamily, PreviewAsset } from "@/domain/catalog";
 import type {
   AuditEntry,
   BidderProfile,
@@ -24,19 +23,6 @@ import type { Content, Settings } from "@/domain/settings";
 export interface Actor {
   id: string;
   label: string;
-}
-
-export interface CatalogRepository {
-  get(): Promise<Catalog>;
-  upsertComponent(component: Component, actor: Actor): Promise<Component>;
-  setComponentActive(id: string, active: boolean, actor: Actor): Promise<void>;
-  upsertMovementFamily(family: MovementFamily, actor: Actor): Promise<void>;
-  upsertCompat(record: CompatRecord, actor: Actor): Promise<void>;
-  deleteCompat(id: string, actor: Actor): Promise<void>;
-  upsertAsset(asset: PreviewAsset, actor: Actor): Promise<void>;
-  deleteAsset(id: string, actor: Actor): Promise<void>;
-  /** Decrement stock when an order is placed; returns ids that ran out. */
-  adjustStock(deltas: { id: string; delta: number }[], actor: Actor): Promise<string[]>;
 }
 
 export interface ProductRepository {
@@ -115,7 +101,6 @@ export interface MiscRepository {
 
 export interface Repositories {
   driver: "dev" | "supabase";
-  catalog: CatalogRepository;
   products: ProductRepository;
   orders: OrderRepository;
   customers: CustomerRepository;

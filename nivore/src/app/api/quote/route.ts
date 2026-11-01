@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { repos } from "@/data/repositories";
+import { getPartsCatalog } from "@/server/parts";
 import { CheckoutItemSchema } from "@/domain/models";
 import { json, readJson, requestIp, sameOrigin } from "@/server/http";
 import { priceCart } from "@/server/pricing-service";
@@ -19,8 +20,8 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await readJson(req));
   if (!parsed.success) return json({ error: "Invalid request." }, 400);
   const r = repos();
-  const [catalog, products, settings] = await Promise.all([r.catalog.get(), r.products.list(), r.settings.get()]);
-  const priced = priceCart(parsed.data.items, { catalog, products, settings, promoCode: parsed.data.promoCode, method: parsed.data.method, governorate: parsed.data.governorate });
+  const [products, settings] = await Promise.all([r.products.list(), r.settings.get()]);
+  const priced = priceCart(parsed.data.items, { parts: getPartsCatalog(), products, settings, promoCode: parsed.data.promoCode, method: parsed.data.method, governorate: parsed.data.governorate });
   return json({
     ok: priced.ok,
     totals: priced.totals,
@@ -33,9 +34,7 @@ export async function POST(req: Request) {
       quantity: l.quantity,
       unitMinor: l.unitMinor,
       buildRef: l.buildRef,
-      encoded: l.encoded,
       lines: l.lines,
-      leadTimeDays: l.leadTimeDays,
     })),
   });
 }

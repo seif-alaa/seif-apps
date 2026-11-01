@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { repos } from "@/data/repositories";
 import { AuctionSchema, type Auction } from "@/domain/auction";
-import { CompatRecordSchema, ComponentSchema, MovementFamilySchema, PreviewAssetSchema } from "@/domain/catalog";
 import { ORDER_STATUSES, PaymentStatus, ProductSchema, type OrderStatus } from "@/domain/models";
 import { PricingSettingsSchema, ShippingSettingsSchema } from "@/domain/pricing";
 import { ContentSchema, SettingsSchema } from "@/domain/settings";
@@ -29,74 +28,6 @@ function issues(e: z.ZodError): string {
 
 function refreshStorefront() {
   revalidatePath("/", "layout");
-}
-
-/* ── Components & catalogue ───────────────────────────────────────────── */
-
-export async function saveComponent(input: unknown, isNew: boolean): Promise<Result> {
-  const actor = await guard();
-  const parsed = ComponentSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: issues(parsed.error) };
-  const catalog = await repos().catalog.get();
-  const clashId = catalog.components.find((c) => c.id === parsed.data.id);
-  if (isNew && clashId) return { ok: false, error: "A component with this id already exists." };
-  if (catalog.components.some((c) => c.code === parsed.data.code && c.id !== parsed.data.id)) return { ok: false, error: "This share code is already used by another component." };
-  if (!isNew && clashId && clashId.type !== parsed.data.type) return { ok: false, error: "A component's type cannot be changed." };
-  await repos().catalog.upsertComponent(parsed.data, actor);
-  refreshStorefront();
-  return { ok: true };
-}
-
-export async function setComponentActive(id: string, active: boolean): Promise<Result> {
-  const actor = await guard();
-  await repos().catalog.setComponentActive(id, active, actor);
-  refreshStorefront();
-  return { ok: true };
-}
-
-export async function saveMovementFamily(input: unknown): Promise<Result> {
-  const actor = await guard();
-  const parsed = MovementFamilySchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: issues(parsed.error) };
-  await repos().catalog.upsertMovementFamily(parsed.data, actor);
-  refreshStorefront();
-  return { ok: true };
-}
-
-export async function saveCompat(input: unknown): Promise<Result> {
-  const actor = await guard();
-  const parsed = CompatRecordSchema.safeParse({ updatedAt: new Date().toISOString(), id: randomUUID(), ...(input as object) });
-  if (!parsed.success) return { ok: false, error: issues(parsed.error) };
-  if (parsed.data.aId === parsed.data.bId) return { ok: false, error: "Choose two different components." };
-  const catalog = await repos().catalog.get();
-  const existing = catalog.compat.find((r) => (r.aId === parsed.data.aId && r.bId === parsed.data.bId) || (r.aId === parsed.data.bId && r.bId === parsed.data.aId));
-  await repos().catalog.upsertCompat({ ...parsed.data, id: existing?.id ?? parsed.data.id }, actor);
-  refreshStorefront();
-  return { ok: true };
-}
-
-export async function deleteCompat(id: string): Promise<Result> {
-  const actor = await guard();
-  await repos().catalog.deleteCompat(id, actor);
-  refreshStorefront();
-  return { ok: true };
-}
-
-export async function saveAsset(input: unknown): Promise<Result> {
-  const actor = await guard();
-  const parsed = PreviewAssetSchema.safeParse({ id: randomUUID(), updatedAt: new Date().toISOString(), ...(input as object) });
-  if (!parsed.success) return { ok: false, error: issues(parsed.error) };
-  if (!parsed.data.src.startsWith("/uploads/")) return { ok: false, error: "Upload the image through the asset manager." };
-  await repos().catalog.upsertAsset(parsed.data, actor);
-  refreshStorefront();
-  return { ok: true };
-}
-
-export async function deleteAsset(id: string): Promise<Result> {
-  const actor = await guard();
-  await repos().catalog.deleteAsset(id, actor);
-  refreshStorefront();
-  return { ok: true };
 }
 
 /* ── Products ────────────────────────────────────────────────────────── */

@@ -52,7 +52,6 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
             <span>
               {i.name} {i.quantity > 1 && <span className="text-taupe-ink">× {i.quantity}</span>}
               {i.buildRef && <span className="tabular block text-[12px] tracking-[0.08em] text-taupe-ink">{i.buildRef}</span>}
-              {i.engraving && <span className="block text-[12px] text-taupe-ink">Engraving: “{i.engraving.text}”</span>}
             </span>
             <span className="tabular">{formatEGP(i.unitMinor * i.quantity)}</span>
           </li>

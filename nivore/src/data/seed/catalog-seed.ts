@@ -1,49 +1,38 @@
 import type { Auction } from "@/domain/auction";
-import type { Configuration } from "@/domain/configuration";
 import type { Collection, Product } from "@/domain/models";
 import type { Content, Settings } from "@/domain/settings";
-import { components } from "./components";
 
 /** SAMPLE DATA — development seed. Replace through the admin before launch. */
 
 const T0 = "2026-10-01T09:00:00.000Z";
 
-function cfg(parts: Configuration["parts"]): Configuration {
-  return { parts, engraving: null, options: [] };
-}
-
-/** Product price = component prices + assembly, rounded to the nearest EGP 50. */
-function priceFor(c: Configuration, assemblyMinor: number): number {
-  const sum = Object.values(c.parts).reduce((acc, id) => acc + (components.find((x) => x.id === id)?.priceMinor ?? 0), 0);
-  return Math.round((sum + assemblyMinor) / 5000) * 5000;
-}
-
 export const ASSEMBLY_MINOR = 150_000;
 
-export const collections: Collection[] = [
-  { id: "col-01", slug: "collection-01", name: "Collection 01", description: "The first compositions from the atelier.", sortOrder: 1 },
-  { id: "col-dress", slug: "dress", name: "Dress", description: "Slim, polished, quiet.", sortOrder: 2 },
-  { id: "col-tool", slug: "tool", name: "Tool", description: "Rotating bezels, lume and steel bracelets.", sortOrder: 3 },
-  { id: "col-travel", slug: "travel", name: "Travel", description: "A second time zone.", sortOrder: 4 },
-];
+export const collections: Collection[] = [{ id: "col-01", slug: "collection-01", name: "Collection 01", description: "The first compositions from the atelier.", sortOrder: 1 }];
 
-type ProductSeed = Pick<Product, "id" | "slug" | "name" | "dialLabel" | "subtitle" | "description" | "collectionIds" | "configuration"> &
-  Partial<Product>;
-
-function product(p: ProductSeed, i: number): Product {
+/**
+ * Finished pieces, one per photo in public/products (source: incoming-images/watches/06_finished_watches).
+ * TODO: the brief left names, prices and descriptions as placeholders. Names below are working names taken
+ * from what each photo shows; prices are 0 ("Price to be announced", not orderable) until set in Admin → Products.
+ * Pieces 3 and 4 have no photo yet, so they stay as hidden drafts.
+ */
+function product(p: Pick<Product, "id" | "slug" | "name" | "movement"> & Partial<Product>, i: number, photo: string | null, alt: string): Product {
   return {
+    dialLabel: "",
+    subtitle: `${p.movement}.`,
+    description: "Description to come.",
+    collectionIds: ["col-01"],
+    priceMinor: 0, // TODO price
     compareAtMinor: null,
-    priceMinor: priceFor(p.configuration, ASSEMBLY_MINOR),
-    images: [],
+    images: photo ? [{ src: photo, alt, width: 1122, height: 1402 }] : [],
     extraSpecs: [],
     stockQuantity: 1,
-    status: "active",
+    status: photo ? "active" : "draft",
     releaseAt: null,
-    featured: false,
+    featured: Boolean(photo),
     soldOut: false,
-    allowCustomization: true,
     maxPerOrder: 1,
-    seo: { title: `${p.name} · ${p.dialLabel} — NIVORÉ`, description: p.subtitle },
+    seo: { title: `${p.name} — NIVORÉ`, description: `${p.movement}. An independent NIVORÉ build.` },
     sortOrder: i * 10,
     createdAt: T0,
     updatedAt: T0,
@@ -52,109 +41,11 @@ function product(p: ProductSeed, i: number): Product {
 }
 
 export const products: Product[] = [
-  product(
-    {
-      id: "p-alba-36-ivory",
-      slug: "alba-36-ivory",
-      name: "ALBA 36",
-      dialLabel: "Ivory",
-      subtitle: "A 36 mm polished steel case, an ivory sunburst dial and slim dauphine hands on espresso leather.",
-      description:
-        "A 36 mm polished steel case with an ivory sunburst dial and slim polished dauphine hands, fitted on a soft espresso leather strap. Built in our atelier around a third-party automatic movement, named on its certificate.",
-      collectionIds: ["col-01", "col-dress"],
-      featured: true,
-      stockQuantity: 2,
-      configuration: cfg({ movement: "mv-nh35-white-3", dial: "dial-ivory-date", case: "case-dress-36", hands: "hands-dauphine-steel", bezel: "bezel-smooth-steel", crystal: "cx-flat-30", band: "st-leather-espresso-18", clasp: "bk-tang-16", caseback: "cb-36-solid" }),
-    },
-    1,
-  ),
-  product(
-    {
-      id: "p-notte-40-black",
-      slug: "notte-40-black",
-      name: "NOTTE 40",
-      dialLabel: "Black",
-      subtitle: "A 40 mm rotating-bezel case, matte black dial with lume, on a three-link steel bracelet.",
-      description:
-        "A 40 mm brushed and polished steel case with a guarded crown at 4 o'clock, a matte black dial with applied lume and a black aluminium dive insert. Fitted on a three-link bracelet with a glide-adjust clasp, and a display caseback to show the movement.",
-      collectionIds: ["col-01", "col-tool"],
-      featured: true,
-      configuration: cfg({ movement: "mv-nh35-white-38", dial: "dial-black-diver", case: "case-diver-40", hands: "hands-sword-lume", bezel: "bezel-dive-coin", insert: "ins-black-alu", crystal: "cx-dome-315", chapterRing: "cr-40-black", band: "br-oyster-20", clasp: "cl-glide-16", caseback: "cb-40-display" }),
-    },
-    2,
-  ),
-  product(
-    {
-      id: "p-alba-40-gmt-graphite",
-      slug: "alba-40-gmt-graphite",
-      name: "ALBA 40 GMT",
-      dialLabel: "Graphite",
-      subtitle: "A four-hand GMT in a 40 mm travel case, with a wine and navy 24-hour insert on a five-link bracelet.",
-      description:
-        "A graphite sunburst dial and a red-tipped GMT hand that tracks a second time zone against a wine and navy 24-hour insert. The movement is ordered in for each build, so allow for its lead time.",
-      collectionIds: ["col-01", "col-travel"],
-      featured: true,
-      configuration: cfg({ movement: "mv-nh34-white-3", dial: "dial-graphite-gmt", case: "case-voyager-40", hands: "hands-gmt-sword", bezel: "bezel-dive-coin", insert: "ins-gmt-wine-navy", crystal: "cx-cyclops-315", chapterRing: "cr-40-silver", band: "br-jubilee-20", clasp: "cl-fold-16", caseback: "cb-40-solid" }),
-    },
-    3,
-  ),
-  product(
-    {
-      id: "p-sera-36-cognac",
-      slug: "sera-36-cognac",
-      name: "SERA 36",
-      dialLabel: "Cognac",
-      subtitle: "A gold-tone 36 mm case, cognac sunburst dial with Roman numerals and a fluted bezel.",
-      description:
-        "Warm and evening-minded: a cognac sunburst dial with printed Roman numerals and gold-tone dauphine hands under a box sapphire crystal, framed by a fluted gold-tone bezel.",
-      collectionIds: ["col-01", "col-dress"],
-      configuration: cfg({ movement: "mv-nh35-white-3", dial: "dial-cognac-roman", case: "case-dress-36-gold", hands: "hands-dauphine-gold", bezel: "bezel-fluted-gold", crystal: "cx-box-30", band: "st-leather-espresso-18", clasp: "bk-tang-16-gold", caseback: "cb-36-solid" }),
-    },
-    4,
-  ),
-  product(
-    {
-      id: "p-alba-34-pearl",
-      slug: "alba-34-pearl",
-      name: "ALBA 34",
-      dialLabel: "Pearl",
-      subtitle: "A 34 mm polished case with a natural pearlescent dial and rose-tone pencil hands, no date.",
-      description:
-        "A compact 34 mm case with a pearlescent dial that shifts with the light, and rose-tone pencil hands. Time only, on ivory leather. Every pearl dial is slightly different from the photograph.",
-      collectionIds: ["col-01", "col-dress"],
-      featured: true,
-      configuration: cfg({ movement: "mv-nh38", dial: "dial-pearl", case: "case-petite-34", hands: "hands-pencil-rose", bezel: "bezel-smooth-steel", crystal: "cx-flat-295", band: "st-leather-ivory-18", clasp: "bk-tang-16", caseback: "cb-34-solid" }),
-    },
-    5,
-  ),
-  product(
-    {
-      id: "p-meridiana-40-sky",
-      slug: "meridiana-40-sky",
-      name: "MERIDIANA 40",
-      dialLabel: "Sky",
-      subtitle: "A brushed cushion case with an integrated bezel and a pale sky dial, on a 22 mm bracelet.",
-      description:
-        "A softened-square case that wears smaller than its 40 mm width, a matte sky dial with lumed batons, and a three-link bracelet cut for the cushion profile.",
-      collectionIds: ["col-01"],
-      configuration: cfg({ movement: "mv-nh35-white-3", dial: "dial-sky-30", case: "case-cushion-40", hands: "hands-baton-lume", crystal: "cx-dome-31", band: "br-oyster-22-cushion", clasp: "cl-fold-18", caseback: "cb-c40-solid" }),
-    },
-    6,
-  ),
-  product(
-    {
-      id: "p-notte-39-lacquer",
-      slug: "notte-39-lacquer",
-      name: "NOTTE 39",
-      dialLabel: "Lacquer",
-      subtitle: "An octagonal 39 mm case with a black lacquer dial, time only.",
-      description:
-        "Eight brushed facets and polished chamfers around a deep black lacquer dial, with nothing on it but the hours. A display caseback shows the movement.",
-      collectionIds: ["col-01"],
-      configuration: cfg({ movement: "mv-nh38", dial: "dial-lacquer-black-30", case: "case-octagon-39", hands: "hands-dauphine-steel", crystal: "cx-flat-315", band: "br-oyster-20-octagon", clasp: "cl-fold-16", caseback: "cb-o39-display" }),
-    },
-    7,
-  ),
+  product({ id: "p-baby-blue", slug: "baby-blue", name: "Baby Blue", movement: "NH35 automatic" }, 1, "/products/product_1_diver.webp", "A baby-blue dial watch on a steel bracelet, on a watchmaker's bench"),
+  product({ id: "p-gmt", slug: "gmt", name: "GMT", movement: "NH34 GMT automatic" }, 2, "/products/product_2_gmt.webp", "A red and black 24-hour bezel GMT watch on a steel bracelet, on a watchmaker's bench"),
+  product({ id: "p-chocolate", slug: "chocolate", name: "Chocolate", movement: "NH35 automatic" }, 3, null, ""),
+  product({ id: "p-wave-diver", slug: "wave-diver", name: "Wave Diver", movement: "NH35 automatic" }, 4, null, ""),
+  product({ id: "p-panda-chrono", slug: "panda-chrono", name: "Panda Chrono", movement: "VK63 chronograph (mecha-quartz)" }, 5, "/products/product_5_panda_chrono.webp", "A white-dial chronograph with black sub-dials on a steel bracelet, on a watchmaker's bench"),
 ];
 
 /* ── Auctions (demonstration mode, no bids) ──────────────────────────── */
@@ -182,19 +73,19 @@ export function seedAuctions(now: Date): Auction[] {
     {
       ...base,
       id: "auc-01",
-      slug: "n01-notte-40-burgundy",
-      title: "N° 01 · SERA 40",
-      subtitle: "A one-of-one in burgundy and tobacco",
+      slug: "n01-skx-42-navy",
+      title: "N° 01 · SKX 42",
+      subtitle: "A one-of-one in navy and brown leather",
       description:
-        "A single build from the atelier: a burgundy sunburst dial that leans brown in shade, a tobacco dive insert, and a scalloped bezel. It will not be repeated in this combination. Shown here as an illustration until the piece is photographed.",
+        "A single build from the atelier: a navy sunburst dial with applied lume under a black dive bezel, on a brown leather strap. It will not be repeated in this combination. Shown here as an illustration until the piece is photographed.",
       specs: [
-        { label: "Movement", value: "TMI NH35A, 3.8 crown, white date" },
-        { label: "Case", value: "Diver 40, brushed and polished steel" },
-        { label: "Dial", value: "Burgundy sunburst, applied lume" },
-        { label: "Bezel", value: "Scalloped, tobacco aluminium insert" },
-        { label: "Bracelet", value: "Five-link steel, fold-over clasp" },
+        { label: "Movement", value: "NH35 automatic, date" },
+        { label: "Case", value: "SKX 42, steel" },
+        { label: "Dial", value: "Navy sunburst, applied lume" },
+        { label: "Bezel", value: "Black dive insert, 60 minutes" },
+        { label: "Strap", value: "Brown leather, 22 mm" },
       ],
-      previewBuild: "b=M3.D18.C5.H09.Z07.I04.X05.R01.S02.K01.B07",
+      previewBuild: "SKX.case_SKX_steel.bezel_SKX_dive_black.dial_SKX_navy.hands_SKX_mercedes.strap_SKX_leather_brown",
       startingBidMinor: 1_400_000,
       incrementMinor: 50_000,
       opensAt: iso(-1),
@@ -203,19 +94,18 @@ export function seedAuctions(now: Date): Auction[] {
     {
       ...base,
       id: "auc-02",
-      slug: "n02-alba-34-stone",
-      title: "N° 02 · ALBA 34",
-      subtitle: "Stone dial, time only",
-      description:
-        "A feetless stone-grained dial in the Petite 34 case, with blue-tone leaf hands. Opening for bids soon.",
+      slug: "n02-skx-42-silver",
+      title: "N° 02 · SKX 42",
+      subtitle: "Silver sector dial on a 5-link bracelet",
+      description: "A silver sector dial under a black dive bezel, on a 5-link steel bracelet. Opening for bids soon.",
       specs: [
-        { label: "Movement", value: "TMI NH38A, no date" },
-        { label: "Case", value: "Petite 34, polished steel" },
-        { label: "Dial", value: "Stone grained, feetless" },
-        { label: "Hands", value: "Leaf, blue tone" },
-        { label: "Strap", value: "Ivory leather, 18 mm" },
+        { label: "Movement", value: "NH35 automatic, date" },
+        { label: "Case", value: "SKX 42, steel" },
+        { label: "Dial", value: "Silver sector" },
+        { label: "Bezel", value: "Black dive insert, 60 minutes" },
+        { label: "Bracelet", value: "5-link steel, 22 mm" },
       ],
-      previewBuild: "b=M6.D09.C1.H08.Z01.X01.S10.K04.B01",
+      previewBuild: "SKX.case_SKX_steel.bezel_SKX_dive_black.dial_SKX_silver.hands_SKX_mercedes.bracelet_SKX_jubilee_steel",
       startingBidMinor: 1_100_000,
       incrementMinor: 50_000,
       opensAt: iso(10),
@@ -323,8 +213,8 @@ export const content: Content = {
     eyebrow: "Atelier · Collection 01",
     headline: "Defined by Detail.",
     body: "Automatic watches composed one part at a time in our atelier in Egypt. Choose a finished piece, or compose your own.",
-    image: null,
-    imageAlt: "",
+    image: "/products/product_2_gmt.webp",
+    imageAlt: "A red and black GMT watch on a steel bracelet, on a watchmaker's bench",
   },
   intro: {
     headline: "An independent atelier for considered timepieces.",
@@ -334,15 +224,15 @@ export const content: Content = {
       "Our pieces are custom builds around proven third-party automatic movements and selected aftermarket components. We name every part, and we never claim what we have not earned.",
   },
   process: [
-    { title: "Choose a movement", body: "Date, day-date, time only or a second time zone. We explain each in plain words." },
-    { title: "Compose the watch", body: "Dial, case, hands, bezel and strap. Only parts that fit together are offered." },
+    { title: "Choose a movement", body: "Date, time only or a second time zone. The movement is fixed by the model you choose." },
+    { title: "Compose the watch", body: "Case, bezel, dial, hands and strap. Only parts made for the model you chose are offered." },
     { title: "We assemble it", body: "Your watch is assembled and checked in the atelier, then presented with its certificate of composition." },
   ],
   craft: {
     eyebrow: "The quiet part of the work",
     headline: "Every part is chosen for how it sits beside the others.",
     points: [
-      { title: "Proportion", body: "Case diameter, lug-to-lug and hand length are recorded for every part, and the builder draws them to scale." },
+      { title: "Proportion", body: "Every part is photographed at its real size, so the builder shows how the pieces sit together." },
       { title: "Honesty", body: "Movements and components are named as supplied by their makers. Nothing is described as more than it is." },
       { title: "Restraint", body: "We add only what improves the piece. Fewer details, each given full attention." },
     ],
@@ -358,7 +248,7 @@ export const content: Content = {
     { title: "Assembly", body: "We prepare the components and assemble your watch. You can check its status at any time." },
     { title: "Delivery", body: "Your watch is delivered across Egypt, with its certificate and care card." },
   ],
-  featuredProductIds: ["p-alba-36-ivory", "p-notte-40-black", "p-alba-34-pearl"],
+  featuredProductIds: ["p-baby-blue", "p-gmt", "p-panda-chrono"],
   featuredAuctionId: "auc-01",
   collectionBanner: {
     headline: "Timepieces",

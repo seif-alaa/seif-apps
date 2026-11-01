@@ -3,11 +3,9 @@ import { randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, statSync, writeFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { applyBid, settleAuction, validateBid, type Auction, type Bid } from "@/domain/auction";
-import type { Catalog } from "@/domain/catalog";
 import type { AuditEntry, BidderProfile, Collection, Customer, Inquiry, Order, Product, WaitlistEntry } from "@/domain/models";
 import type { Content, Settings } from "@/domain/settings";
 import { collections, content, products, seedAuctions, settings } from "../seed/catalog-seed";
-import { compat, components, movementFamilies } from "../seed/components";
 import type { Actor, Repositories } from "./types";
 
 /**
@@ -21,9 +19,8 @@ import type { Actor, Repositories } from "./types";
  */
 
 interface DevDb {
-  schema: 1;
+  schema: 2;
   createdAt: string;
-  catalog: Catalog;
   products: Product[];
   collections: Collection[];
   orders: Order[];
@@ -46,9 +43,8 @@ const DB_FILE = path.join(DATA_DIR, "dev-db.json");
 function seed(): DevDb {
   const now = new Date();
   return {
-    schema: 1,
+    schema: 2,
     createdAt: now.toISOString(),
-    catalog: { movementFamilies, components, compat, assets: [] },
     products,
     collections,
     orders: [],
@@ -78,6 +74,13 @@ function load(): DevDb {
   const { mtimeMs } = statSync(DB_FILE);
   if (cache && cache.mtimeMs === mtimeMs) return cache.db;
   const db = JSON.parse(readFileSync(DB_FILE, "utf8")) as DevDb;
+  if (db.schema !== 2) {
+    // The previous (simulated-catalogue) store is kept as a backup and replaced by fresh sample data.
+    renameSync(DB_FILE, `${DB_FILE}.v${db.schema}.bak`);
+    const fresh = seed();
+    write(fresh);
+    return fresh;
+  }
   cache = { mtimeMs, db };
   return db;
 }
@@ -125,86 +128,6 @@ function mustOrder(db: DevDb, ref: string): Order {
 
 export const devRepositories: Repositories = {
   driver: "dev",
-
-  catalog: {
-    get: () => read((db) => db.catalog),
-    upsertComponent: (component, actor) =>
-      transact((db) => {
-        const i = db.catalog.components.findIndex((c) => c.id === component.id);
-        const before = i >= 0 ? db.catalog.components[i] : undefined;
-        const next = { ...component, updatedAt: nowIso() };
-        if (i >= 0) db.catalog.components[i] = next;
-        else db.catalog.components.push(next);
-        const priceChanged = before && (before.priceMinor !== next.priceMinor || before.priceAdjustmentMinor !== next.priceAdjustmentMinor);
-        audit(
-          db,
-          actor,
-          before ? (priceChanged ? "price.change" : "component.update") : "component.create",
-          "component",
-          next.id,
-          before ? `${next.name} updated${priceChanged ? ` (price ${before.priceMinor} → ${next.priceMinor})` : ""}` : `${next.name} created`,
-          before ? { priceMinor: before.priceMinor, priceAdjustmentMinor: before.priceAdjustmentMinor, stock: before.stock, active: before.active } : undefined,
-          { priceMinor: next.priceMinor, priceAdjustmentMinor: next.priceAdjustmentMinor, stock: next.stock, active: next.active },
-        );
-        return next;
-      }),
-    setComponentActive: (id, active, actor) =>
-      transact((db) => {
-        const c = db.catalog.components.find((x) => x.id === id);
-        if (!c) throw new Error("Component not found");
-        c.active = active;
-        c.updatedAt = nowIso();
-        audit(db, actor, active ? "component.activate" : "component.deactivate", "component", id, `${c.name} ${active ? "activated" : "deactivated"}`);
-      }),
-    upsertMovementFamily: (family, actor) =>
-      transact((db) => {
-        const i = db.catalog.movementFamilies.findIndex((f) => f.id === family.id);
-        if (i >= 0) db.catalog.movementFamilies[i] = family;
-        else db.catalog.movementFamilies.push(family);
-        audit(db, actor, "movement-family.save", "movementFamily", family.id, `${family.name} saved`);
-      }),
-    upsertCompat: (record, actor) =>
-      transact((db) => {
-        const i = db.catalog.compat.findIndex((r) => r.id === record.id);
-        const next = { ...record, updatedAt: nowIso() };
-        if (i >= 0) db.catalog.compat[i] = next;
-        else db.catalog.compat.push(next);
-        audit(db, actor, "compat.save", "compat", record.id, `${record.aId} × ${record.bId}: ${record.status}`);
-      }),
-    deleteCompat: (id, actor) =>
-      transact((db) => {
-        db.catalog.compat = db.catalog.compat.filter((r) => r.id !== id);
-        audit(db, actor, "compat.delete", "compat", id, "Compatibility record removed");
-      }),
-    upsertAsset: (asset, actor) =>
-      transact((db) => {
-        const i = db.catalog.assets.findIndex((a) => a.id === asset.id);
-        const next = { ...asset, updatedAt: nowIso() };
-        if (i >= 0) db.catalog.assets[i] = next;
-        else db.catalog.assets.push(next);
-        audit(db, actor, "asset.save", "asset", asset.id, `${asset.slot} asset for ${asset.componentId} (${asset.status})`);
-      }),
-    deleteAsset: (id, actor) =>
-      transact((db) => {
-        db.catalog.assets = db.catalog.assets.filter((a) => a.id !== id);
-        audit(db, actor, "asset.delete", "asset", id, "Preview asset removed");
-      }),
-    adjustStock: (deltas, actor) =>
-      transact((db) => {
-        const ranOut: string[] = [];
-        for (const { id, delta } of deltas) {
-          const c = db.catalog.components.find((x) => x.id === id);
-          if (!c || c.stock.quantity == null) continue;
-          c.stock.quantity = Math.max(0, c.stock.quantity + delta);
-          if (c.stock.quantity === 0 && c.stock.status !== "made_to_order") {
-            c.stock.status = "out_of_stock";
-            ranOut.push(id);
-          } else if (c.stock.quantity <= 2 && c.stock.status === "in_stock") c.stock.status = "low";
-        }
-        if (deltas.length) audit(db, actor, "inventory.adjust", "component", "*", `Stock adjusted for ${deltas.length} components`);
-        return ranOut;
-      }),
-  },
 
   products: {
     list: () => read((db) => [...db.products].sort((a, b) => a.sortOrder - b.sortOrder)),

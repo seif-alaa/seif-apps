@@ -13,3 +13,5 @@ test-results
 playwright-report
 .work
 incoming-images/watches
+public/parts/*.png
+public/parts/_contact_sheet.png

@@ -1,15 +1,13 @@
 import "server-only";
-import { createEngine } from "@/domain/compatibility";
-import { buildReference, encodeConfiguration, presentationName, SLOT_LABEL, SLOT_ORDER, type Configuration } from "@/domain/configuration";
-import { toPublicCatalog, type Catalog } from "@/domain/catalog";
 import { isProductVisible, type CheckoutItem, type ComponentSnapshot, type Product } from "@/domain/models";
-import { computeTotals, quoteBuild, type QuoteLine, type Totals } from "@/domain/pricing";
+import { computeTotals, type QuoteLine, type Totals } from "@/domain/pricing";
 import type { Settings } from "@/domain/settings";
+import { buildName, buildReference, encodeBuild, handsPrice, layersOf, validateBuild, type Layers, type PartsCatalog, type PhotoBuild } from "@/lib/parts";
 
 /**
- * Server-authoritative pricing. Every total shown at checkout and every
- * order total is recomputed here from the catalogue; client-supplied prices
- * are never read.
+ * Server-authoritative pricing. Every total shown at checkout and every order
+ * total is recomputed here from the parts manifest and data/prices.json;
+ * client-supplied prices are never read.
  */
 
 export interface PricedLine {
@@ -27,10 +25,7 @@ export interface PricedLine {
   buildRef: string | null;
   encoded: string | null;
   productId: string | null;
-  configuration: Configuration | null;
-  leadTimeDays: number | null;
-  /** Component/product stock to decrement when the order is placed. */
-  stock: { componentIds: string[]; productId: string | null };
+  layers: Layers | null;
 }
 
 export interface PricedCart {
@@ -39,63 +34,64 @@ export interface PricedCart {
   totals: Totals;
 }
 
+/** One line per part (hands as a set), then the assembly fee. Part prices come from data/prices.json (EGP). */
+function quoteBuild(parts: PartsCatalog, b: PhotoBuild, assemblyMinor: number) {
+  const f = validateBuild(parts, b)!;
+  const L = layersOf(parts, b);
+  const hands = f.hands.find((h) => h.id === b.hands)!;
+  const rows: { key: string; label: string; id: string; name: string; egp: number }[] = [];
+  const row = (key: string, label: string, id: string | null) => id && rows.push({ key, label, id, name: parts.parts[id].label, egp: parts.parts[id].priceEgp });
+  row("case", "Case", L.case);
+  row("bezel", "Bezel", L.bezel);
+  row("dial", "Dial", L.dial);
+  row("ring", "Chapter ring", L.ring);
+  rows.push({ key: "hands", label: "Hands", id: hands.id, name: hands.label, egp: handsPrice(parts, hands) });
+  row("gmt", "GMT hand", L.gmt);
+  row("band", "Bracelet / strap", L.bracelet);
+  const lines: QuoteLine[] = rows.map((r) => ({ key: r.key, label: r.label, name: r.name, amountMinor: r.egp * 100, discountEligible: true, componentId: r.id, sku: r.id }));
+  lines.push({ key: "assembly", label: "Assembly", name: "Atelier assembly and regulation check", amountMinor: assemblyMinor, discountEligible: false });
+  const components: ComponentSnapshot[] = rows.map((r) => ({ slot: r.key, componentId: r.id, name: r.name, sku: r.id, priceMinor: r.egp * 100, costMinor: null, spec: { family: f.id, movement: f.movement } }));
+  return { family: f, lines, components, layers: L };
+}
+
 export function priceCart(
   items: CheckoutItem[],
-  ctx: { catalog: Catalog; products: Product[]; settings: Settings; promoCode?: string | null; method?: "delivery" | "pickup" | null; governorate?: string | null; now?: Date },
+  ctx: { parts: PartsCatalog; products: Product[]; settings: Settings; promoCode?: string | null; method?: "delivery" | "pickup" | null; governorate?: string | null; now?: Date },
 ): PricedCart {
   const now = ctx.now ?? new Date();
-  const engine = createEngine(toPublicCatalog(ctx.catalog));
-  const full = new Map(ctx.catalog.components.map((c) => [c.id, c]));
   const pricing = ctx.settings.pricing;
 
   const lines: PricedLine[] = items.map((item, index) => {
     if (item.kind === "custom") {
-      const config = item.configuration;
-      const v = engine.validate(config);
-      const q = quoteBuild(config, engine, pricing);
-      const b = { dial: engine.get(config.parts.dial), case: engine.get(config.parts.case), movement: engine.get(config.parts.movement) };
-      const fam = b.movement ? engine.family((b.movement.spec as { familyId: string }).familyId) : undefined;
-      const name = presentationName(b.dial as never, b.case as never, fam?.complications).full;
-      let error: string | null = null;
-      if (!v.ok) {
-        error = v.unavailable[0]
-          ? `${engine.get(v.unavailable[0].id)?.name ?? "A part"} is no longer available. Open the composition to choose another.`
-          : v.missing[0]
-            ? `Choose a ${SLOT_LABEL[v.missing[0]].toLowerCase()} before ordering.`
-            : "Some parts in this composition no longer fit together. Open it in the builder to review.";
-      } else if (q.availability.status === "unavailable") error = "Part of this composition is currently unavailable.";
-      else if (item.quantity > pricing.maxCustomQuantity) error = `Custom compositions are limited to ${pricing.maxCustomQuantity} per order.`;
-      if (config.engraving && !pricing.engraving.enabled) error = error ?? "Engraving is not offered at the moment. Remove it in the builder.";
-      const components: ComponentSnapshot[] = SLOT_ORDER.flatMap((slot) => {
-        const id = config.parts[slot];
-        const c = id ? full.get(id) : undefined;
-        if (!c) return [];
-        const line = q.lines.find((l) => l.key === slot);
-        return [{ slot, componentId: c.id, name: c.name, sku: c.sku, priceMinor: line?.amountMinor ?? 0, costMinor: c.costMinor, spec: c.spec as Record<string, unknown> }];
-      });
+      const b = item.build;
+      if (!validateBuild(ctx.parts, b)) {
+        return { index, kind: "custom", ok: false, error: "Part of this composition is no longer available. Open it in the builder to choose again.", name: "Custom composition", detail: "", quantity: item.quantity, unitMinor: 0, discountableUnitMinor: 0, lines: [], components: [], buildRef: null, encoded: null, productId: null, layers: null };
+      }
+      const q = quoteBuild(ctx.parts, b, pricing.assemblyMinor);
+      const unitMinor = q.lines.reduce((s, l) => s + l.amountMinor, 0);
+      const error = item.quantity > pricing.maxCustomQuantity ? `Custom compositions are limited to ${pricing.maxCustomQuantity} per order.` : null;
       return {
         index,
         kind: "custom",
         ok: !error,
         error,
-        name,
-        detail: [fam?.caliber, b.case?.name].filter(Boolean).join(" · "),
+        name: buildName(ctx.parts, b),
+        detail: [q.family.movement, ctx.parts.parts[b.case].label].join(" · "),
         quantity: item.quantity,
-        unitMinor: q.totalMinor,
-        discountableUnitMinor: q.discountableMinor,
+        unitMinor,
+        discountableUnitMinor: q.lines.filter((l) => l.discountEligible).reduce((s, l) => s + l.amountMinor, 0),
         lines: q.lines,
-        components,
-        buildRef: buildReference(config),
-        encoded: encodeConfiguration(config, ctx.catalog.components).toString(),
+        components: q.components,
+        buildRef: buildReference(b),
+        encoded: encodeBuild(b),
         productId: null,
-        configuration: config,
-        leadTimeDays: q.availability.leadTimeDays,
-        stock: { componentIds: components.map((c) => c.componentId), productId: null },
+        layers: q.layers,
       };
     }
     const p = ctx.products.find((x) => x.id === item.productId);
     let error: string | null = null;
     if (!p || !isProductVisible(p, now)) error = "This piece is no longer available.";
+    else if (p.priceMinor <= 0) error = "This piece has no price yet.";
     else if (p.soldOut || p.stockQuantity < 1) error = "This piece has sold out.";
     else if (item.quantity > Math.min(p.maxPerOrder, p.stockQuantity)) error = `Only ${Math.min(p.maxPerOrder, p.stockQuantity)} available per order.`;
     return {
@@ -103,24 +99,17 @@ export function priceCart(
       kind: "catalog",
       ok: !error,
       error,
-      name: p ? `${p.name} · ${p.dialLabel}` : "Unavailable piece",
-      detail: p?.subtitle ?? "",
+      name: p ? `${p.name}${p.dialLabel ? ` · ${p.dialLabel}` : ""}` : "Unavailable piece",
+      detail: p?.movement ?? "",
       quantity: item.quantity,
       unitMinor: p?.priceMinor ?? 0,
       discountableUnitMinor: p?.priceMinor ?? 0,
-      lines: p ? [{ key: "product", label: "Timepiece", name: `${p.name} · ${p.dialLabel}`, amountMinor: p.priceMinor, discountEligible: true }] : [],
-      components: p
-        ? SLOT_ORDER.flatMap((slot) => {
-            const c = p.configuration.parts[slot] ? full.get(p.configuration.parts[slot]!) : undefined;
-            return c ? [{ slot, componentId: c.id, name: c.name, sku: c.sku, priceMinor: 0, costMinor: c.costMinor, spec: c.spec as Record<string, unknown> }] : [];
-          })
-        : [],
+      lines: p ? [{ key: "product", label: "Timepiece", name: p.name, amountMinor: p.priceMinor, discountEligible: true }] : [],
+      components: [],
       buildRef: null,
       encoded: null,
       productId: p?.id ?? null,
-      configuration: p?.configuration ?? null,
-      leadTimeDays: null,
-      stock: { componentIds: [], productId: p?.id ?? null },
+      layers: null,
     };
   });
 

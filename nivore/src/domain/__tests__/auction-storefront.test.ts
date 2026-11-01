@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { products, seedAuctions } from "@/data/seed/catalog-seed";
-import { compat, components, movementFamilies } from "@/data/seed/components";
+import { seedAuctions } from "@/data/seed/catalog-seed";
 import { applyBid, auctionStatus, minimumNextBid, settleAuction, validateBid, type Auction, type Bid } from "@/domain/auction";
-import { toPublicCatalog } from "@/domain/catalog";
-import { createEngine } from "@/domain/compatibility";
-import { decodeConfiguration } from "@/domain/configuration";
 import { normalizeEgyptianMobile, normalizePhone } from "@/domain/egypt";
 import { cairoLocalToUtc, resolveStorefront, utcToCairoLocal } from "@/domain/storefront";
 
@@ -100,18 +96,5 @@ describe("Egyptian phone numbers", () => {
     expect(normalizeEgyptianMobile("0131234567")).toBeNull();
     expect(normalizePhone("+44 7700 900123", { allowInternational: false })).toBeNull();
     expect(normalizePhone("+44 7700 900123", { allowInternational: true })).toBe("+447700900123");
-  });
-});
-
-describe("seed integrity", () => {
-  const engine = createEngine(toPublicCatalog({ movementFamilies, components, compat, assets: [] }));
-  it("every product is a valid composition", () => {
-    for (const p of products) expect(engine.validate(p.configuration), p.id).toMatchObject({ issues: [], missing: [] });
-  });
-  it("auction preview builds decode to compatible compositions", () => {
-    for (const a of seedAuctions(now)) {
-      const cfg = decodeConfiguration(new URLSearchParams(a.previewBuild!), toPublicCatalog({ movementFamilies, components, compat, assets: [] }).components)!;
-      expect(engine.validate(cfg).issues, a.id).toEqual([]);
-    }
   });
 });

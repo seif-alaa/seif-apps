@@ -80,20 +80,6 @@ export function MinuteTrack({ className, count = 60, style }: { className?: stri
   );
 }
 
-/**
- * Photography placeholder (Brand Book convention): hatched field with a
- * mono caption describing the intended shot. Always visibly a placeholder.
- */
-export function PhotoPlaceholder({ label, className, style }: { label: string; className?: string; style?: CSSProperties }) {
-  return (
-    <div className={`photo-placeholder ${className ?? ""}`} style={style} role="img" aria-label={`Photograph to come: ${label}`}>
-      <span className="absolute bottom-3 left-3 right-3 font-mono text-[10px] uppercase leading-snug tracking-[0.08em] text-taupe-ink/90">
-        Photo — {label}
-      </span>
-    </div>
-  );
-}
-
 /** "N° 01" index numeral. */
 export function IndexNumeral({ n, className }: { n: number | string; className?: string }) {
   return (

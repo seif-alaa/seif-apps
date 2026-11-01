@@ -8,6 +8,7 @@ import { CheckoutSchema, type Order, type OrderStatus, type PaymentStatus } from
 import { findPromo } from "@/domain/pricing";
 import { resolveStorefront } from "@/domain/storefront";
 import { ipHash, json, requestIp, sameOrigin } from "@/server/http";
+import { getPartsCatalog } from "@/server/parts";
 import { priceCart } from "@/server/pricing-service";
 import { rateLimit } from "@/server/rate-limit";
 import { PASS_COOKIE, signToken, verifyToken } from "@/server/session";
@@ -69,8 +70,8 @@ export async function POST(req: Request) {
   if (input.method === "delivery" && !settings.shipping.delivery.enabled) return json({ error: "Delivery is not available at the moment." }, 422);
   if (input.method === "pickup" && !settings.shipping.pickup.enabled) return json({ error: "Pickup is not available at the moment." }, 422);
 
-  const [catalog, products] = await Promise.all([r.catalog.get(), r.products.list()]);
-  const priced = priceCart(input.items, { catalog, products, settings, promoCode: input.promoCode || null, method: input.method, governorate: input.governorate ?? null });
+  const products = await r.products.list();
+  const priced = priceCart(input.items, { parts: getPartsCatalog(), products, settings, promoCode: input.promoCode || null, method: input.method, governorate: input.governorate ?? null });
   if (!priced.ok) return json({ error: "Some pieces in your bag need attention.", lines: priced.lines.map((l) => ({ index: l.index, error: l.error })) }, 409);
   if (priced.totals.promoError) return json({ error: priced.totals.promoError, fields: { promoCode: priced.totals.promoError } }, 422);
   if (priced.totals.shippingMinor == null) return json({ error: "Delivery is not available for this address.", fields: { governorate: "Delivery is not available here yet." } }, 422);
@@ -126,7 +127,6 @@ export async function POST(req: Request) {
         unitMinor: l.unitMinor,
         lines: l.lines,
         components: l.components,
-        engraving: l.configuration?.engraving ?? null,
       })),
       totals: {
         subtotalMinor: priced.totals.subtotalMinor,
@@ -145,9 +145,7 @@ export async function POST(req: Request) {
 
   if (!duplicate) {
     const actor = { id: "system", label: "System (order)" };
-    const componentDeltas = priced.lines.flatMap((l) => l.stock.componentIds.map((id) => ({ id, delta: -l.quantity })));
-    await r.catalog.adjustStock(componentDeltas, actor);
-    await r.products.adjustStock(priced.lines.filter((l) => l.stock.productId).map((l) => ({ id: l.stock.productId!, delta: -l.quantity })), actor);
+    await r.products.adjustStock(priced.lines.filter((l) => l.productId).map((l) => ({ id: l.productId!, delta: -l.quantity })), actor);
     if (order.promoCode) {
       const s = await r.settings.get();
       const { promo } = findPromo(order.promoCode, s.pricing, new Date());

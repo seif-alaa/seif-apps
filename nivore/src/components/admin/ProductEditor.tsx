@@ -3,29 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { duplicateProduct, saveProduct } from "@/app/admin/actions";
-import type { PublicCatalog } from "@/domain/catalog";
-import { createEngine } from "@/domain/compatibility";
-import { decodeConfiguration, SLOT_LABEL, SLOT_ORDER, type Slot } from "@/domain/configuration";
 import { formatEGP, minorToPoundsString, poundsToMinor } from "@/domain/money";
 import type { Collection, Product } from "@/domain/models";
-import { quoteBuild, type PricingSettings } from "@/domain/pricing";
 import { cairoLocalToUtc, utcToCairoLocal } from "@/domain/storefront";
-import { resolveBuild } from "@/components/watch/geometry";
-import { WatchStage } from "@/components/watch/WatchStage";
 import { SaveBar, useSave } from "./SaveBar";
 import { UploadButton } from "./Upload";
 
-export function ProductEditor({ initial, isNew, catalog, collections, pricing }: { initial: Product; isNew: boolean; catalog: PublicCatalog; collections: Collection[]; pricing: PricingSettings }) {
+export function ProductEditor({ initial, isNew, collections }: { initial: Product; isNew: boolean; collections: Collection[] }) {
   const router = useRouter();
   const [p, setP] = useState(initial);
   const [price, setPrice] = useState(minorToPoundsString(initial.priceMinor));
   const [compareAt, setCompareAt] = useState(initial.compareAtMinor == null ? "" : minorToPoundsString(initial.compareAtMinor));
   const [release, setRelease] = useState(utcToCairoLocal(initial.releaseAt));
-  const [link, setLink] = useState("");
-  const engine = useMemo(() => createEngine(catalog), [catalog]);
-  const validation = engine.validate(p.configuration);
-  const quote = quoteBuild(p.configuration, engine, pricing);
-  const build = resolveBuild(p.configuration, engine.get, engine.family);
   const set = <K extends keyof Product>(k: K, v: Product[K]) => setP({ ...p, [k]: v });
   const { pending, msg, save, setMsg } = useSave(async (v: Product) => {
     const r = await saveProduct(v, isNew);
@@ -52,7 +41,7 @@ export function ProductEditor({ initial, isNew, catalog, collections, pricing }:
         <section className="grid gap-4 border border-line p-5 md:grid-cols-2">
           <h2 className="eyebrow md:col-span-2">Presentation</h2>
           {text("Name (collection + size)", p.name, (v) => set("name", v), { placeholder: "ALBA 38" })}
-          {text("Dial label", p.dialLabel, (v) => set("dialLabel", v), { placeholder: "Ivory" })}
+          {text("Movement", p.movement, (v) => set("movement", v), { placeholder: "NH35 automatic" })}
           {text("URL slug", p.slug, (v) => set("slug", v.toLowerCase().replace(/[^a-z0-9-]/g, "-")))}
           {text("Id", p.id, (v) => set("id", v), { disabled: !isNew })}
           <label className="block md:col-span-2"><span className="field-label">Short line</span><input className="field text-[14px]" value={p.subtitle} onChange={(e) => set("subtitle", e.target.value)} /></label>
@@ -67,49 +56,11 @@ export function ProductEditor({ initial, isNew, catalog, collections, pricing }:
           </fieldset>
         </section>
 
-        <section className="border border-line p-5">
-          <h2 className="eyebrow">Composition</h2>
-          <p className="mb-4 mt-1 text-[12.5px] text-taupe-ink">Specifications on the product page are generated from these components. Paste a builder link to import a composition.</p>
-          <div className="mb-4 flex gap-2">
-            <input className="field text-[13px]" placeholder="https://…/build?b=M1.D01…" value={link} onChange={(e) => setLink(e.target.value)} />
-            <button type="button" className="btn btn-outline" onClick={() => {
-              try {
-                const q = new URL(link, window.location.origin).searchParams;
-                const cfg = decodeConfiguration(q, catalog.components);
-                if (cfg) setP({ ...p, configuration: engine.normalize(cfg) });
-              } catch { setMsg({ ok: false, text: "That link could not be read." }); }
-            }}>Import</button>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            {SLOT_ORDER.filter((s) => engine.applicable(p.configuration, s)).map((s) => (
-              <label key={s} className="block">
-                <span className="field-label">{SLOT_LABEL[s]}</span>
-                <select className="field text-[13.5px]" value={p.configuration.parts[s] ?? ""} onChange={(e) => {
-                  const next = engine.propose(p.configuration, s as Slot, e.target.value || null);
-                  setP({ ...p, configuration: next.next });
-                }}>
-                  <option value="">—</option>
-                  {engine.listType(s).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </label>
-            ))}
-          </div>
-          {validation.ok ? (
-            <p className="mt-4 text-[12.5px] text-ok">All parts verified compatible.</p>
-          ) : (
-            <ul className="mt-4 list-disc pl-5 text-[12.5px] text-err">
-              {validation.issues.slice(0, 4).map((i) => <li key={i.ruleId + i.ids.join()}>{i.message}</li>)}
-              {validation.missing.map((m) => <li key={m}>Missing {SLOT_LABEL[m].toLowerCase()}.</li>)}
-              {validation.unavailable.map((u) => <li key={u.id}>{u.reason} ({u.id})</li>)}
-            </ul>
-          )}
-        </section>
-
         <section className="grid gap-4 border border-line p-5 md:grid-cols-3">
           <h2 className="eyebrow md:col-span-3">Price, stock & release</h2>
           {text("Price (EGP)", price, setPrice, { inputMode: "decimal" })}
           {text("Compare-at (EGP, optional)", compareAt, setCompareAt, { inputMode: "decimal" })}
-          <div className="text-[12.5px] text-taupe-ink md:pt-7">Parts + assembly: {formatEGP(quote.totalMinor)} <button type="button" className="ml-1 underline" onClick={() => setPrice(minorToPoundsString(Math.round(quote.totalMinor / 5000) * 5000))}>Use</button></div>
+          <p className="text-[12.5px] text-taupe-ink md:pt-7">A price of 0 shows &ldquo;Price to be announced&rdquo; and the piece cannot be ordered.</p>
           {text("Stock quantity", String(p.stockQuantity), (v) => set("stockQuantity", Math.max(0, Math.floor(Number(v) || 0))), { inputMode: "numeric" })}
           {text("Max per order", String(p.maxPerOrder), (v) => set("maxPerOrder", Math.min(10, Math.max(1, Math.floor(Number(v) || 1)))), { inputMode: "numeric" })}
           <label className="block">
@@ -120,7 +71,7 @@ export function ProductEditor({ initial, isNew, catalog, collections, pricing }:
           </label>
           <label className="block"><span className="field-label">Release (Cairo time)</span><input type="datetime-local" className="field text-[14px]" value={release} onChange={(e) => setRelease(e.target.value)} /></label>
           <div className="space-y-2 md:col-span-2 md:pt-6">
-            {([["featured", "Featured"], ["soldOut", "Mark sold out"], ["allowCustomization", "Offer “Make it your own” in the builder"]] as const).map(([k, l]) => (
+            {([["featured", "Featured"], ["soldOut", "Mark sold out"]] as const).map(([k, l]) => (
               <label key={k} className="flex items-center gap-3 text-[14px]"><input type="checkbox" className="h-4 w-4 accent-[var(--color-espresso)]" checked={p[k]} onChange={(e) => set(k, e.target.checked)} />{l}</label>
             ))}
           </div>
@@ -149,7 +100,6 @@ export function ProductEditor({ initial, isNew, catalog, collections, pricing }:
         </section>
       </div>
       <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
-        <div className="relative aspect-[600/860] bg-cream"><WatchStage build={build} assets={catalog.assets} sweep={false} /></div>
         {!isNew && <button type="button" className="btn btn-outline w-full" onClick={async () => { const r = await duplicateProduct(p.id); if (r.id) router.push(`/admin/products/${r.id}`); }}>Duplicate as draft</button>}
         {!isNew && <a className="btn btn-ghost w-full" href={`/timepieces/${p.slug}`} target="_blank">View on site</a>}
       </aside>

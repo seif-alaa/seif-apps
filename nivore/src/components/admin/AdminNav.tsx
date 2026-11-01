@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 
 const GROUPS = [
   { title: "Operate", items: [["Overview", "/admin"], ["Orders", "/admin/orders"], ["Customers", "/admin/customers"], ["Inquiries", "/admin/inquiries"], ["Auctions", "/admin/auctions"], ["Analytics", "/admin/analytics"]] },
-  { title: "Catalogue", items: [["Products", "/admin/products"], ["Components", "/admin/components"], ["Preview assets", "/admin/assets"], ["Compatibility", "/admin/compatibility"], ["Pricing", "/admin/pricing"]] },
+  { title: "Catalogue", items: [["Products", "/admin/products"], ["Pricing", "/admin/pricing"]] },
   { title: "Website", items: [["Storefront & launch", "/admin/storefront"], ["Content", "/admin/content"], ["Settings", "/admin/settings"], ["Audit log", "/admin/audit"]] },
 ] as const;
 

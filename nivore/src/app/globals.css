@@ -220,18 +220,6 @@
     margin-top: 0.35rem;
   }
 
-  /* Placeholder photography — Brand Book hatch convention. Always labelled. */
-  .photo-placeholder {
-    position: relative;
-    background-color: #e4ddd0;
-    background-image: repeating-linear-gradient(
-      135deg,
-      rgba(118, 106, 93, 0.13) 0 1px,
-      transparent 1px 11px
-    );
-    overflow: hidden;
-  }
-
   /* Chips for filters */
   .chip {
     display: inline-flex;
@@ -261,24 +249,6 @@
 }
 
 /* ── Motion ─────────────────────────────────────────────────────────── */
-@keyframes layer-in {
-  from {
-    opacity: 0;
-    transform: translate3d(var(--lx, 0), var(--ly, 0), 0) scale(var(--ls, 1));
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes layer-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -287,14 +257,6 @@
   to {
     opacity: 1;
     transform: none;
-  }
-}
-@keyframes sweep {
-  from {
-    transform: rotate(var(--from, 0deg));
-  }
-  to {
-    transform: rotate(calc(var(--from, 0deg) + 360deg));
   }
 }
 @keyframes sheet-up {
@@ -313,33 +275,17 @@
     opacity: 1;
   }
 }
-@keyframes flip-out {
+
+@keyframes layer-fade {
   from {
-    transform: rotateY(0deg);
-    opacity: 1;
+    opacity: 0;
   }
   to {
-    transform: rotateY(88deg);
-    opacity: 0.6;
-  }
-}
-@keyframes flip-in {
-  from {
-    transform: rotateY(-88deg);
-    opacity: 0.6;
-  }
-  to {
-    transform: none;
     opacity: 1;
   }
 }
-@keyframes light-drift {
-  from {
-    opacity: 0.0;
-  }
-  to {
-    opacity: 1;
-  }
+.layer-fade {
+  animation: layer-fade 150ms ease-out both;
 }
 
 .animate-fade-up {

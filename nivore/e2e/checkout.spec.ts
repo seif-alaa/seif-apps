@@ -1,19 +1,21 @@
 import { expect, test } from "@playwright/test";
 import { adminLogin } from "./helpers";
 
-async function addCatalogPiece(page: import("@playwright/test").Page, slug = "alba-36-ivory") {
-  await page.goto(`/timepieces/${slug}`);
-  await page.getByTestId("pdp-add").click();
-  await expect(page.getByText("Added.")).toBeVisible();
+/** Pieces have no price yet (TODO), so orders are placed with a composition from the builder. */
+async function addComposition(page: import("@playwright/test").Page) {
+  await page.goto("/build");
+  for (let i = 0; i < 6; i++) await page.getByTestId("continue").click();
+  await page.getByTestId("review-add").click();
+  await expect(page.getByRole("status").filter({ hasText: "Added to your bag" })).toBeVisible();
 }
 
 test.describe("Bag and checkout", () => {
   test("validation, cash on delivery order, confirmation and status lookup", async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => localStorage.clear());
-    await addCatalogPiece(page);
+    await addComposition(page);
     await page.goto("/bag");
-    await expect(page.getByTestId("bag-items")).toContainText("ALBA 36 · Ivory");
+    await expect(page.getByTestId("bag-items")).toContainText("SKX 42");
     await page.getByTestId("to-checkout").click();
     await page.waitForURL("**/checkout");
 
@@ -54,12 +56,17 @@ test.describe("Bag and checkout", () => {
   });
 
   test("server rejects tampered totals and unknown promo codes", async ({ request }) => {
+    const build = { family: "SKX", case: "case_SKX_steel", bezel: "bezel_SKX_dive_black", dial: "dial_SKX_black", hands: "hands_SKX_mercedes", band: "bracelet_SKX_oyster_steel" };
     const q = await request.post("/api/quote", {
       headers: { origin: "http://localhost:3200" },
-      data: { items: [{ kind: "catalog", productId: "p-notte-40-black", quantity: 1, priceMinor: 1 }], promoCode: "FAKE" },
+      data: { items: [{ kind: "custom", build, quantity: 1, priceMinor: 1, unitMinor: 1 }], promoCode: "FAKE" },
     });
     const body = await q.json();
-    expect(body.lines[0].unitMinor).toBe(1_495_000);
+    expect(body.lines[0].unitMinor).toBe(150_000); // parts are 0 (TODO prices) + EGP 1,500 assembly, whatever the browser sends
+    const unpriced = await request.post("/api/quote", { headers: { origin: "http://localhost:3200" }, data: { items: [{ kind: "catalog", productId: "p-gmt", quantity: 1 }] } });
+    expect((await unpriced.json()).lines[0].error).toMatch(/no price yet/);
+    const forged = await request.post("/api/quote", { headers: { origin: "http://localhost:3200" }, data: { items: [{ kind: "custom", build: { ...build, dial: "dial_SKX_nope" }, quantity: 1 }] } });
+    expect((await forged.json()).ok).toBe(false);
     expect(body.totals.promoError).toMatch(/not recognised/);
     const bad = await request.post("/api/quote", { headers: { origin: "https://evil.example" }, data: { items: [] } });
     expect(bad.status()).toBe(403);
@@ -68,7 +75,7 @@ test.describe("Bag and checkout", () => {
   test("InstaPay order stays pending until the atelier confirms it", async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => localStorage.clear());
-    await addCatalogPiece(page, "notte-39-lacquer");
+    await addComposition(page);
     await page.goto("/checkout");
     await page.fill('input[name="name"]', "Omar Adel");
     await page.fill('input[name="phone"]', "01112345678");

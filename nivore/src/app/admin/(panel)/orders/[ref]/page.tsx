@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { LayerStack } from "@/components/builder/stack";
+import { decodeBuild, layersOf } from "@/lib/parts";
+import { getPartsCatalog } from "@/server/parts";
 import { FulfilmentControl, NoteControl, PaymentControl, StatusControl } from "@/components/admin/OrderControls";
 import { Card, PageHeader, Pill, fmtDate } from "@/components/admin/ui";
 import { repos } from "@/data/repositories";
@@ -32,12 +35,11 @@ export default async function OrderDetail({ params }: { params: Promise<{ ref: s
           {o.items.map((item) => (
             <Card key={item.id} title={item.kind === "custom" ? `Custom composition · ${item.buildRef}` : "Catalogue piece"}>
               <div className="grid gap-5 sm:grid-cols-[150px_1fr]">
-                {item.encoded ? (
-                  <div className="grid grid-cols-2 gap-1 sm:grid-cols-1">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- server-rendered SVG */}
-                    <img src={`/api/render?${item.encoded}`} alt="Front" className="aspect-[600/860] w-full bg-cream" />
-                  </div>
-                ) : <div />}
+                {(() => {
+                  const parts = getPartsCatalog();
+                  const build = decodeBuild(parts, item.encoded);
+                  return build ? <LayerStack layers={layersOf(parts, build)} alt="Ordered composition" className="w-full bg-cream" /> : <div />;
+                })()}
                 <div>
                   <p className="text-[16px]">{item.name} {item.quantity > 1 && <span className="text-taupe-ink">× {item.quantity}</span>}</p>
                   <table className="mt-3 w-full text-[12.5px]">
@@ -55,7 +57,6 @@ export default async function OrderDetail({ params }: { params: Promise<{ ref: s
                       ))}
                     </tbody>
                   </table>
-                  {item.engraving && <p className="mt-3 border border-line bg-cream p-3 text-[13px]">Engraving ({item.engraving.style}): <strong>“{item.engraving.text}”</strong></p>}
                   <p className="tabular mt-3 text-right text-[14px]">Unit {formatEGP(item.unitMinor)}</p>
                 </div>
               </div>

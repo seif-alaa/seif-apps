@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import { LayerStack } from "@/components/builder/stack";
 import { formatEGP } from "@/domain/money";
+import { encodeBuild } from "@/lib/parts";
 import { useBag } from "@/lib/cart";
 import { useQuote } from "./useQuote";
 
@@ -30,12 +32,16 @@ export function BagView({ checkoutOpen, lockedMessage }: { checkoutOpen: boolean
       <ul className="divide-y divide-line border-y border-line" data-testid="bag-items">
         {items.map((item, i) => {
           const line = quote?.lines[i];
-          const query = item.kind === "custom" ? line?.encoded : null;
+          const query = item.kind === "custom" && item.build ? encodeBuild(item.build) : null;
           return (
             <li key={item.id} className="grid grid-cols-[96px_1fr] gap-5 py-6 sm:grid-cols-[120px_1fr]">
-              <div className="relative aspect-[600/860] bg-cream">
-                {/* eslint-disable-next-line @next/next/no-img-element -- server-rendered SVG thumbnail */}
-                {query ? <img src={`/api/render?${query}`} alt="" className="absolute inset-0 h-full w-full" loading="lazy" /> : item.kind === "catalog" ? <span className="absolute inset-0 grid place-items-center text-[10px] text-taupe-ink">NIVORÉ</span> : null}
+              <div className="relative aspect-square bg-cream">
+                {item.layers ? (
+                  <LayerStack layers={item.layers} alt="" className="absolute inset-0 h-full w-full" />
+                ) : item.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- small bag thumbnail of the product photo
+                  <img src={item.image} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                ) : null}
               </div>
               <div className="flex min-w-0 flex-col">
                 <div className="flex items-start justify-between gap-4">
@@ -65,7 +71,7 @@ export function BagView({ checkoutOpen, lockedMessage }: { checkoutOpen: boolean
                     </label>
                   ) : (
                     query && (
-                      <Link href={`/build?${query}&edit=${item.id}`} className="underline underline-offset-4">
+                      <Link href={`/build?b=${query}&edit=${item.id}`} className="underline underline-offset-4">
                         Edit composition
                       </Link>
                     )

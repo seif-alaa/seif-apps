@@ -1,43 +1,45 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { formatEGP } from "@/domain/money";
 import type { Product } from "@/domain/models";
 
-/**
- * Catalogue card. Real photography when uploaded; otherwise an illustrative
- * SVG from /api/render, loaded as a cacheable image (keeps HTML small).
- */
-export function ProductCard({ product, query, priority = false, caliber }: { product: Product; query: string; priority?: boolean; caliber?: string }) {
+export const PREVIEW_CAPTION = "Preview image. Your watch is photographed before dispatch.";
+export const priceLabel = (p: Pick<Product, "priceMinor">) => (p.priceMinor > 0 ? formatEGP(p.priceMinor) : "Price to be announced");
+
+/** Catalogue card: the product photo, name, price and movement. */
+export function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
   const photo = product.images[0];
   const soldOut = product.soldOut || product.stockQuantity < 1;
   return (
     <Link href={`/timepieces/${product.slug}`} className="group block" data-testid={`product-${product.slug}`}>
-      <div className="relative aspect-[4/5] overflow-hidden bg-cream transition-colors duration-500 group-hover:bg-[#e3dccf]">
-        {photo ? (
-          <Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw" className="object-cover" priority={priority} />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element -- vector render; next/image adds nothing for SVG
-          <img
-            src={`/api/render?${query}`}
-            alt={`${product.name} ${product.dialLabel}, illustrative rendering`}
-            width={600}
-            height={860}
-            loading={priority ? "eager" : "lazy"}
-            decoding="async"
-            fetchPriority={priority ? "high" : "auto"}
-            className="absolute inset-[4%] h-[92%] w-[92%] object-contain transition-transform duration-700 ease-[var(--ease-settle)] group-hover:scale-[1.025]"
-          />
-        )}
-        {soldOut && <span className="absolute left-3 top-3 bg-ivory px-2 py-1 text-[10px] uppercase tracking-[0.16em]">Sold</span>}
-      </div>
+      {photo && (
+        <div className="relative aspect-[4/5] overflow-hidden bg-cream">
+          <Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw" className="object-cover transition-transform duration-700 ease-[var(--ease-settle)] group-hover:scale-[1.02]" priority={priority} />
+          {soldOut && <span className="absolute left-3 top-3 bg-ivory px-2 py-1 text-[10px] uppercase tracking-[0.16em]">Sold</span>}
+        </div>
+      )}
       <div className="mt-3 flex items-baseline justify-between gap-3">
-        <p>
-          <span className="collection-title text-[12px]">{product.name}</span>
-          <span className="text-[13px] text-taupe-ink"> · {product.dialLabel}</span>
+        <p className="collection-title text-[12px]">
+          {product.name}
+          {product.dialLabel && <span className="font-normal normal-case tracking-normal text-taupe-ink"> · {product.dialLabel}</span>}
         </p>
-        <p className="tabular text-[13px]">{formatEGP(product.priceMinor)}</p>
+        <p className="tabular shrink-0 text-[13px]">{priceLabel(product)}</p>
       </div>
-      {caliber && <p className="mt-0.5 text-[12px] text-taupe-ink">{caliber} automatic{product.stockQuantity === 1 && !soldOut ? " · one available" : ""}</p>}
+      <p className="mt-0.5 text-[12px] text-taupe-ink">{product.movement}</p>
+      <p className="mt-1 text-[11px] text-taupe-ink/80">{PREVIEW_CAPTION}</p>
     </Link>
+  );
+}
+
+/** 1 column on phones, 2 on tablets, 3 on desktop; an incomplete last row is centred so no card sits alone at the edge. */
+export function ProductGrid({ children }: { children: React.ReactNode[] }) {
+  return (
+    <ul className="flex flex-wrap justify-center gap-x-6 gap-y-12">
+      {children.map((c, i) => (
+        <li key={i} className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]">
+          {c}
+        </li>
+      ))}
+    </ul>
   );
 }

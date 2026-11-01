@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AuctionRoom } from "@/components/auction/AuctionRoom";
-import { resolveBuild } from "@/components/watch/geometry";
-import { buildLayers, StaticWatch } from "@/components/watch/layers";
+import { LayerStack } from "@/components/builder/stack";
 import { repos } from "@/data/repositories";
 import { auctionStatus, minimumNextBid } from "@/domain/auction";
-import { decodeConfiguration } from "@/domain/configuration";
-import { getEngine, getPublicCatalog, getSettings, getStorefront } from "@/server/catalog";
+import { decodeBuild, layersOf } from "@/lib/parts";
+import { getPartsCatalog } from "@/server/parts";
+import { getSettings, getStorefront } from "@/server/catalog";
 
 type Params = Promise<{ slug: string }>;
 
@@ -21,9 +21,10 @@ export default async function AuctionPage({ params }: { params: Params }) {
   const r = repos();
   const a = await r.auctions.get(slug);
   if (!a || !a.published) notFound();
-  const [engine, catalog, settings, sf, bids] = await Promise.all([getEngine(), getPublicCatalog(), getSettings(), getStorefront(), r.auctions.bids(a.id)]);
+  const [settings, sf, bids] = await Promise.all([getSettings(), getStorefront(), r.auctions.bids(a.id)]);
+  const parts = getPartsCatalog();
   const now = new Date();
-  const cfg = a.previewBuild ? decodeConfiguration(new URLSearchParams(a.previewBuild), catalog.components) : null;
+  const build = decodeBuild(parts, a.previewBuild);
   const terms = a.terms || settings.policies["auction-terms"].body;
   const initial = {
     status: auctionStatus(a, now),
@@ -43,7 +44,7 @@ export default async function AuctionPage({ params }: { params: Params }) {
       <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
         <div className="lg:sticky lg:top-24 lg:self-start">
           <div className="relative aspect-[4/5] bg-cream">
-            {cfg && <StaticWatch layers={buildLayers(resolveBuild(cfg, engine.get, engine.family), "front", catalog.assets)} idPrefix="ap" className="absolute inset-[5%] h-[90%] w-[90%]" title={`${a.title}, illustrative`} />}
+            {build && <LayerStack layers={layersOf(parts, build)} alt={`${a.title}, illustrative`} className="absolute inset-[5%] h-[90%] w-[90%]" priority />}
           </div>
           <p className="mt-2 text-[11px] text-taupe-ink">Illustrative rendering until the piece is photographed.</p>
         </div>

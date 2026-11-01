@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { compat, components, movementFamilies, STARTER_PARTS } from "@/data/seed/components";
-import { toPublicCatalog } from "@/domain/catalog";
-import { createEngine } from "@/domain/compatibility";
 import { formatEGP, percentOf, poundsToMinor, sumMinor } from "@/domain/money";
-import { computeTotals, quoteBuild, type PricingSettings, type ShippingSettings } from "@/domain/pricing";
-
-const engine = createEngine(toPublicCatalog({ movementFamilies, components, compat, assets: [] }));
+import { computeTotals, type PricingSettings, type ShippingSettings } from "@/domain/pricing";
 
 const pricing: PricingSettings = {
   assemblyMinor: 150_000,
@@ -27,8 +22,6 @@ const shipping: ShippingSettings = {
   delivery: { enabled: true, defaultMinor: 15_000, byGovernorate: { Cairo: 10_000 }, freeOverMinor: 3_000_000, note: "" },
   pickup: { enabled: false, location: "", note: "" },
 };
-
-const starter = { parts: { ...STARTER_PARTS }, engraving: null, options: [] as string[] };
 
 describe("money", () => {
   it("parses admin-entered pounds without floating point error", () => {
@@ -53,38 +46,6 @@ describe("money", () => {
 
   it("refuses non-integer sums", () => {
     expect(() => sumMinor([1, 0.5])).toThrow();
-  });
-});
-
-describe("quoteBuild", () => {
-  it("sums each component, assembly, engraving and enabled options", () => {
-    const q = quoteBuild({ ...starter, engraving: { text: "For L.", style: "serif" }, options: ["gift-note", "disabled-opt"] }, engine, pricing);
-    const partsTotal = Object.values(STARTER_PARTS).reduce((sum, id) => sum + engine.get(id)!.priceMinor, 0);
-    expect(q.totalMinor).toBe(partsTotal + 150_000 + 40_000);
-    expect(q.lines.find((l) => l.key === "option:disabled-opt")).toBeUndefined();
-    expect(q.lines.find((l) => l.key === "assembly")?.amountMinor).toBe(150_000);
-  });
-
-  it("applies per-component price adjustments and never goes negative", () => {
-    const adjusted = components.map((c) =>
-      c.id === "dial-ivory-date" ? { ...c, priceAdjustmentMinor: -20_000 } : c.id === "hands-dauphine-steel" ? { ...c, priceAdjustmentMinor: -9_999_999 } : c,
-    );
-    const e2 = createEngine(toPublicCatalog({ movementFamilies, components: adjusted, compat, assets: [] }));
-    const q = quoteBuild(starter, e2, pricing);
-    expect(q.lines.find((l) => l.key === "dial")!.amountMinor).toBe(130_000 - 20_000);
-    expect(q.lines.find((l) => l.key === "hands")!.amountMinor).toBe(0);
-  });
-
-  it("reports made-to-order lead time", () => {
-    const p = engine.propose(starter, "movement", "mv-nh34-white-3");
-    const q = quoteBuild(p.next, engine, pricing);
-    expect(q.availability.status).toBe("made_to_order");
-    expect(q.availability.leadTimeDays).toBe(14);
-  });
-
-  it("ignores engraving when the admin has disabled it", () => {
-    const q = quoteBuild({ ...starter, engraving: { text: "Hi", style: "sans" } }, engine, { ...pricing, engraving: { ...pricing.engraving, enabled: false } });
-    expect(q.lines.find((l) => l.key === "engraving")).toBeUndefined();
   });
 });
 

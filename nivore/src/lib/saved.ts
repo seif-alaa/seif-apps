@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { Configuration } from "@/domain/configuration";
+import type { Layers, PhotoBuild } from "@/lib/parts";
 import { readLocal, writeLocal } from "./storage";
 
 /**
@@ -11,7 +11,8 @@ import { readLocal, writeLocal } from "./storage";
 export interface SavedDesign {
   ref: string;
   name: string;
-  configuration: Configuration;
+  build: PhotoBuild;
+  layers: Layers;
   query: string;
   savedAt: string;
   totalMinorAtSave: number;
@@ -33,7 +34,8 @@ export const useSaved = create<SavedState>((set, get) => ({
   hydrate() {
     if (get().hydrated) return;
     const stored = readLocal<SavedDesign[]>(KEY);
-    set({ designs: Array.isArray(stored) ? stored.slice(0, 30) : [], hydrated: true });
+    // Designs saved by the previous builder have no `build`; they are ignored.
+    set({ designs: Array.isArray(stored) ? stored.filter((d) => d?.build && d?.layers).slice(0, 30) : [], hydrated: true });
   },
   save(d) {
     const designs = [d, ...get().designs.filter((x) => x.ref !== d.ref)].slice(0, 30);

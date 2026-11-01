@@ -9,42 +9,6 @@ test.describe("Admin", () => {
     expect(api.status()).toBe(401);
   });
 
-  test("a new dial created in the admin appears in the builder once active", async ({ page }) => {
-    await adminLogin(page);
-    await page.goto("/admin/components/new?type=dial");
-    await page.getByLabel("Name", { exact: true }).fill("Saffron sunburst · Date");
-    await page.getByLabel("Id (permanent)").fill("dial-saffron-date");
-    await page.getByLabel("Selling price (EGP)").fill("1450");
-    await page.getByLabel("Colour Name").fill("Saffron");
-    await page.getByLabel("Colour (hex)", { exact: true }).fill("#b8862b");
-    await page.getByLabel("Active in the builder").check();
-    await page.getByTestId("admin-save").click();
-    await page.waitForURL("**/admin/components/dial-saffron-date");
-
-    await page.goto("/build");
-    await page.evaluate(() => localStorage.clear());
-    await page.goto("/build");
-    await page.getByRole("button", { name: /Step 02: Dial/ }).click();
-    await page.getByTestId("opt-dial-saffron-date").click();
-    await expect(page.getByTestId("build-name")).toHaveText(/ALBA 39 · Saffron/);
-  });
-
-  test("inventory change makes a part unavailable in the builder", async ({ page }) => {
-    await adminLogin(page);
-    const setStock = async (status: string) => {
-      await page.goto("/admin/components/dial-graphite-gmt");
-      await page.getByLabel("Stock status").selectOption(status);
-      await page.getByTestId("admin-save").click();
-      await expect(page.getByText("Saved.")).toBeVisible();
-    };
-    await setStock("out_of_stock");
-    await page.goto("/build");
-    await page.getByRole("button", { name: /Step 02: Dial/ }).click();
-    await page.getByRole("button", { name: /Not available with your choices/ }).click();
-    await expect(page.getByTestId("opt-dial-graphite-gmt")).toContainText("Currently unavailable");
-    await setStock("in_stock"); // leave the shared store as we found it
-  });
-
   test("storefront lock: coming soon with countdown, then checkout-only lock", async ({ page, browser }) => {
     await adminLogin(page);
     await page.goto("/admin/storefront");
@@ -84,7 +48,7 @@ test.describe("Admin", () => {
 
 test.describe("Rare pieces (demonstration)", () => {
   test("bid validation, acceptance and duplicate protection", async ({ page, request }) => {
-    await page.goto("/rare-pieces/n01-notte-40-burgundy");
+    await page.goto("/rare-pieces/n01-skx-42-navy");
     await expect(page.getByText("Demonstration room")).toBeVisible();
     await page.fill('input[name="name"]', "Nour Saleh");
     await page.fill('input[name="email"]', "nour@example.com");
