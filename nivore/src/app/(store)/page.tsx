@@ -1,7 +1,9 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { IndexNumeral, MinuteTrack, Monogram } from "@/components/brand/Brand";
 import { LayerStack } from "@/components/builder/stack";
+import { TrustStrip } from "@/components/layout/TrustStrip";
 import { DialTeaser } from "@/components/home/DialTeaser";
 import { PREVIEW_CAPTION, ProductCard, ProductGrid } from "@/components/shop/ProductCard";
 import { repos } from "@/data/repositories";
@@ -12,6 +14,12 @@ import { getContent, getVisibleProducts } from "@/server/catalog";
 import { getPartsCatalog } from "@/server/parts";
 
 const SWATCH: Record<string, string> = { black: "#1d1b1a", silver: "#c9c9c9", emerald: "#1f6b4a", navy: "#1c2a50" };
+
+export const metadata: Metadata = {
+  title: { absolute: "NIVORÉ Timepieces — Independent custom automatic watches, Egypt" },
+  description: "Build your own automatic watch part by part, or choose a finished NIVORÉ piece. Assembled by hand in Egypt. Independent, not affiliated with Seiko.",
+  openGraph: { title: "NIVORÉ Timepieces", description: "Custom automatic watches, assembled by hand in Egypt.", images: [{ url: "/products/product_1_diver.webp", width: 1122, height: 1402, alt: "A NIVORÉ watch on the atelier bench" }] },
+};
 
 export default async function HomePage() {
   const [content, products] = await Promise.all([getContent(), getVisibleProducts()]);
@@ -74,6 +82,7 @@ export default async function HomePage() {
         </div>
         <MinuteTrack className="block h-3 w-full text-taupe/60" count={140} />
       </section>
+      <TrustStrip />
 
       {/* ── Introduction ─────────────────────────────────────── */}
       <section className="mx-auto grid max-w-[1440px] gap-12 px-5 py-24 md:px-10 lg:grid-cols-[0.8fr_1.2fr] lg:py-32">
@@ -104,8 +113,8 @@ export default async function HomePage() {
         </div>
         <div className="mt-10">
           <ProductGrid>
-            {featured.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {featured.map((p, i) => (
+              <ProductCard key={p.id} product={p} priority={i < 3} />
             ))}
           </ProductGrid>
         </div>

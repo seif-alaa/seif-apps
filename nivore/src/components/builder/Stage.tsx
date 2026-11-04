@@ -2,7 +2,10 @@
 
 import { memo, useEffect, useRef, useState, type CSSProperties } from "react";
 import { DEFAULT_TIME, handAngles, partSrc, type Layers } from "@/lib/parts";
-import { BRACELET_FADE, CASE_SHADOW, FILL, GLARE } from "./stack";
+import { BRACELET_ASPECT, FILL, GLARE, strapFade } from "./stack";
+
+/** Soft shadow under the case, sized from the watch box (not the taller stage). */
+const STAGE_SHADOW = "drop-shadow(0 calc(var(--box) * 0.042) calc(var(--box) * 0.056) rgba(0, 0, 0, 0.28))";
 
 /** Swaps a layer's image with a 150 ms crossfade: the old image stays underneath until the new one has faded in. */
 const FadeLayer = memo(function FadeLayer({ id, style }: { id: string | null; style?: CSSProperties }) {
@@ -18,7 +21,7 @@ const FadeLayer = memo(function FadeLayer({ id, style }: { id: string | null; st
     return () => clearTimeout(t);
   }, [prev]);
   const img = (src: string, fade: boolean) => (
-    <img key={src} src={partSrc(src)} alt="" width={1024} height={1024} draggable={false} decoding="async" className={fade ? "layer-fade" : undefined} style={{ ...FILL, ...style }} />
+    <img key={src} src={partSrc(src)} alt="" width={1024} height={src.includes("bracelet_") || src.includes("strap_") ? 2560 : 1024} draggable={false} decoding="async" className={fade ? "layer-fade" : undefined} style={{ ...FILL, ...style }} />
   );
   return (
     <>
@@ -73,14 +76,29 @@ export function Stage({ layers, camera, live, label }: { layers: Layers; camera:
       </div>
     ) : null;
 
+  const strap = layers.bracelet
+    ? {
+        inset: "auto",
+        left: "50%",
+        top: "50%",
+        width: "var(--box)",
+        height: `calc(var(--box) * ${BRACELET_ASPECT})`,
+        transform: `translate(-50%, -50%) scale(${camera * (layers.braceletScale ?? 1)})`,
+        transition: "transform 700ms var(--ease-settle)",
+      }
+    : undefined;
+
   return (
-    <div className="relative h-full w-full" style={{ containerType: "size" }} role="img" aria-label={label}>
+    <div className="stage relative h-full w-full overflow-hidden" style={{ containerType: "size" }} role="img" aria-label={label}>
+      {/* The strap is a tall image centred on the watch box; it runs above and below the box and fades at the stage ends. */}
+      <div className="absolute inset-0 overflow-hidden" style={strapFade(15)}>
+        <FadeLayer id={layers.bracelet} style={strap} />
+      </div>
       <div
         className="absolute left-1/2 top-1/2"
-        style={{ width: "min(100cqw, 100cqh)", aspectRatio: "1", transform: `translate(-50%, -50%) scale(${camera})`, transition: "transform 700ms var(--ease-settle)" }}
+        style={{ width: "var(--box)", aspectRatio: "1", transform: `translate(-50%, -50%) scale(${camera})`, transition: "transform 700ms var(--ease-settle)" }}
       >
-        <FadeLayer id={layers.bracelet} style={BRACELET_FADE} />
-        <FadeLayer id={layers.case} style={{ filter: CASE_SHADOW }} />
+        <FadeLayer id={layers.case} style={{ filter: STAGE_SHADOW }} />
         <FadeLayer id={layers.dial} />
         <FadeLayer id={layers.ring} />
         {hand("hour", layers.hour)}

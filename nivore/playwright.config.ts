@@ -12,7 +12,8 @@ export default defineConfig({
   retries: 0,
   timeout: 60_000,
   reporter: [["list"]],
-  use: { baseURL: "http://localhost:3200", trace: "retain-on-failure" },
+  // Most tests run with the first-visit popup already dismissed; welcome.spec.ts starts from a clean browser.
+  use: { baseURL: "http://localhost:3200", trace: "retain-on-failure", storageState: "e2e/quiet.storage.json" },
   webServer: {
     command: "rm -rf .data-e2e && NIVORE_DATA_DIR=.data-e2e SESSION_SECRET=e2e-only-secret-0123456789abcdefghijklmnop ADMIN_EMAIL=atelier@nivore.local ADMIN_PASSWORD=atelier-e2e-password npx next start -p 3200",
     url: "http://localhost:3200",

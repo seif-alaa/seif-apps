@@ -1,6 +1,7 @@
 import "server-only";
 import { isProductVisible, type CheckoutItem, type ComponentSnapshot, type Product } from "@/domain/models";
-import { computeTotals, type QuoteLine, type Totals } from "@/domain/pricing";
+import { WELCOME_BASIS_POINTS, WELCOME_CODE } from "@/domain/contact";
+import { computeTotals, type Promo, type QuoteLine, type Totals } from "@/domain/pricing";
 import type { Settings } from "@/domain/settings";
 import { buildName, buildReference, encodeBuild, handsPrice, layersOf, validateBuild, type Layers, type PartsCatalog, type PhotoBuild } from "@/lib/parts";
 
@@ -54,12 +55,16 @@ function quoteBuild(parts: PartsCatalog, b: PhotoBuild, assemblyMinor: number) {
   return { family: f, lines, components, layers: L };
 }
 
+const WELCOME_PROMO: Promo = { code: WELCOME_CODE, label: "Welcome 5%", kind: "percent", value: WELCOME_BASIS_POINTS, appliesTo: "all", minSubtotalMinor: 0, startsAt: null, endsAt: null, active: true, usageLimit: null, usedCount: 0 };
+
 export function priceCart(
   items: CheckoutItem[],
-  ctx: { parts: PartsCatalog; products: Product[]; settings: Settings; promoCode?: string | null; method?: "delivery" | "pickup" | null; governorate?: string | null; now?: Date },
+  ctx: { parts: PartsCatalog; products: Product[]; settings: Settings; promoCode?: string | null; welcomeOk?: boolean; method?: "delivery" | "pickup" | null; governorate?: string | null; now?: Date },
 ): PricedCart {
   const now = ctx.now ?? new Date();
-  const pricing = ctx.settings.pricing;
+  const isWelcome = (ctx.promoCode ?? "").trim().toUpperCase() === WELCOME_CODE;
+  // WELCOME5 is built in: 5% of the subtotal (never shipping), only when the server confirmed the contact is eligible.
+  const pricing = isWelcome && ctx.welcomeOk ? { ...ctx.settings.pricing, promos: [...ctx.settings.pricing.promos.filter((p) => p.code !== WELCOME_CODE), WELCOME_PROMO] } : ctx.settings.pricing;
 
   const lines: PricedLine[] = items.map((item, index) => {
     if (item.kind === "custom") {
@@ -115,8 +120,9 @@ export function priceCart(
 
   const valid = lines.filter((l) => l.ok);
   const totals = computeTotals(
-    valid.map((l) => ({ kind: l.kind, unitMinor: l.unitMinor, quantity: l.quantity, discountableUnitMinor: l.discountableUnitMinor })),
+    valid.map((l) => ({ kind: l.kind, unitMinor: l.unitMinor, quantity: l.quantity, discountableUnitMinor: isWelcome ? l.unitMinor : l.discountableUnitMinor })),
     { pricing, shipping: ctx.settings.shipping, promoCode: ctx.promoCode, method: ctx.method ?? null, governorate: ctx.governorate ?? null, now },
   );
+  if (isWelcome && !ctx.welcomeOk) totals.promoError = "This code is for a first order by a contact on our list. Use the same email or mobile number you gave us.";
   return { ok: lines.length > 0 && lines.every((l) => l.ok), lines, totals };
 }

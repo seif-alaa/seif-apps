@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { LayerStack } from "@/components/builder/stack";
 import { formatEGP } from "@/domain/money";
 import { encodeBuild } from "@/lib/parts";
 import { useBag } from "@/lib/cart";
+import { savedWelcome } from "@/lib/welcome";
 import { useQuote } from "./useQuote";
 
 export function BagView({ checkoutOpen, lockedMessage }: { checkoutOpen: boolean; lockedMessage: string }) {
   const { items, hydrated, hydrate, remove, setQuantity } = useBag();
   useEffect(() => hydrate(), [hydrate]);
-  const { quote, loading, error } = useQuote(items, {}, hydrated);
+  const [welcome, setWelcome] = useState<{ code: string; contact: string } | null>(null);
+  useEffect(() => setWelcome(savedWelcome()), []);
+  const { quote, loading, error } = useQuote(items, welcome ? { promoCode: welcome.code, contacts: [welcome.contact] } : {}, hydrated);
 
   if (!hydrated) return <div className="h-64" aria-busy="true" />;
   if (!items.length) {
@@ -92,6 +95,12 @@ export function BagView({ checkoutOpen, lockedMessage }: { checkoutOpen: boolean
             <dt>Subtotal</dt>
             <dd className="tabular">{quote ? formatEGP(quote.totals.subtotalMinor) : "—"}</dd>
           </div>
+          {quote && quote.totals.discountMinor > 0 && (
+            <div className="flex justify-between" data-testid="bag-discount">
+              <dt>{quote.totals.discountLabel ?? "Discount"}</dt>
+              <dd className="tabular">− {formatEGP(quote.totals.discountMinor)}</dd>
+            </div>
+          )}
           <div className="flex justify-between text-taupe-ink">
             <dt>Delivery</dt>
             <dd>Calculated at checkout</dd>

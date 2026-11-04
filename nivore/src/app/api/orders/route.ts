@@ -11,6 +11,8 @@ import { ipHash, json, requestIp, sameOrigin } from "@/server/http";
 import { getPartsCatalog } from "@/server/parts";
 import { priceCart } from "@/server/pricing-service";
 import { rateLimit } from "@/server/rate-limit";
+import { WELCOME_CODE } from "@/domain/contact";
+import { markWelcomeUsed, welcomeEligibility } from "@/server/subscribers";
 import { PASS_COOKIE, signToken, verifyToken } from "@/server/session";
 
 const MAX_EVIDENCE = 5 * 1024 * 1024;
@@ -71,7 +73,9 @@ export async function POST(req: Request) {
   if (input.method === "pickup" && !settings.shipping.pickup.enabled) return json({ error: "Pickup is not available at the moment." }, 422);
 
   const products = await r.products.list();
-  const priced = priceCart(input.items, { parts: getPartsCatalog(), products, settings, promoCode: input.promoCode || null, method: input.method, governorate: input.governorate ?? null });
+  // WELCOME5: decided here from the order's own email and mobile number, never from the client.
+  const welcome = (input.promoCode || "").trim().toUpperCase() === WELCOME_CODE ? await welcomeEligibility([input.email, phone]) : { ok: false, subscriberId: null };
+  const priced = priceCart(input.items, { parts: getPartsCatalog(), products, settings, welcomeOk: welcome.ok, promoCode: input.promoCode || null, method: input.method, governorate: input.governorate ?? null });
   if (!priced.ok) return json({ error: "Some pieces in your bag need attention.", lines: priced.lines.map((l) => ({ index: l.index, error: l.error })) }, 409);
   if (priced.totals.promoError) return json({ error: priced.totals.promoError, fields: { promoCode: priced.totals.promoError } }, 422);
   if (priced.totals.shippingMinor == null) return json({ error: "Delivery is not available for this address.", fields: { governorate: "Delivery is not available here yet." } }, 422);
@@ -146,7 +150,8 @@ export async function POST(req: Request) {
   if (!duplicate) {
     const actor = { id: "system", label: "System (order)" };
     await r.products.adjustStock(priced.lines.filter((l) => l.productId).map((l) => ({ id: l.productId!, delta: -l.quantity })), actor);
-    if (order.promoCode) {
+    if (order.promoCode === WELCOME_CODE && welcome.subscriberId) await markWelcomeUsed(welcome.subscriberId);
+    else if (order.promoCode) {
       const s = await r.settings.get();
       const { promo } = findPromo(order.promoCode, s.pricing, new Date());
       if (promo) {

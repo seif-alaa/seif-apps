@@ -5,6 +5,9 @@ import { notFound } from "next/navigation";
 import { formatEGP } from "@/domain/money";
 import { MinuteTrack } from "@/components/brand/Brand";
 import { AddToBag } from "@/components/shop/AddToBag";
+import { PRODUCT_BUILDS } from "@/config/product-builds";
+import { decodeBuild } from "@/lib/parts";
+import { getPartsCatalog } from "@/server/parts";
 import { PREVIEW_CAPTION, ProductCard, priceLabel } from "@/components/shop/ProductCard";
 import { getSettings, getStorefront, getVisibleProducts } from "@/server/catalog";
 
@@ -29,6 +32,8 @@ export default async function ProductPage({ params }: { params: Params }) {
   const title = `${p.name}${p.dialLabel ? ` · ${p.dialLabel}` : ""}`;
   const available = !p.soldOut && p.stockQuantity > 0;
   const orderable = available && p.priceMinor > 0 && storefront.checkoutOpen;
+  const preset = PRODUCT_BUILDS[p.id];
+  const customizeHref = preset && decodeBuild(getPartsCatalog(), preset) ? `/build?b=${preset}` : "/build";
   const specs = [{ label: "Movement", value: p.movement }, ...p.extraSpecs, { label: "Water resistance", value: "Not rated. Unless your documentation states otherwise, keep it away from water." }];
 
   return (
@@ -60,6 +65,7 @@ export default async function ProductPage({ params }: { params: Params }) {
           <p className="mt-1 text-[12.5px] text-taupe-ink">{available ? (p.stockQuantity === 1 ? "One available · assembled and ready" : "Available · assembled and ready") : "This piece has been sold."}</p>
           <div className="mt-7 grid gap-3">
             <AddToBag productId={p.id} name={title} detail={p.movement} image={p.images[0]?.src} priceMinor={p.priceMinor} available={orderable} unavailableLabel={available && p.priceMinor <= 0 ? "Price to be announced" : "Sold"} maxQuantity={Math.min(p.maxPerOrder, p.stockQuantity)} />
+            <Link href={customizeHref} className="btn btn-outline" data-testid="customize-this">Customize this</Link>
           </div>
           {!storefront.checkoutOpen && <p className="mt-3 text-[12.5px] text-taupe-ink">{settings.storefront.checkoutLockedMessage}</p>}
 

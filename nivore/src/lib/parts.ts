@@ -12,6 +12,8 @@ export interface ManifestPart {
   label: string;
   set?: string;
   hand?: "hour" | "minute" | "second" | "gmt";
+  /** Bracelets/straps: the width (mm) the image was normalised to. */
+  width_mm?: number;
 }
 export interface ManifestFamily {
   name: string;
@@ -23,6 +25,8 @@ export interface ManifestFamily {
   hands: string[];
   gmt_hand?: string[];
   bracelet: string[];
+  /** Lug width (mm): bracelets are scaled in CSS by lug_mm / width_mm. */
+  lug_mm?: number;
 }
 export interface Manifest {
   families_live: Record<string, ManifestFamily>;
@@ -35,6 +39,7 @@ export interface PartInfo {
   type: ManifestPart["type"];
   label: string;
   priceEgp: number;
+  widthMm?: number;
 }
 export interface HandsSet {
   id: string;
@@ -57,6 +62,7 @@ export interface FamilyInfo {
   band: string[];
   ring: string | null;
   gmt: string | null;
+  lugMm: number;
 }
 export interface PartsCatalog {
   families: FamilyInfo[];
@@ -85,6 +91,8 @@ export interface Layers {
   gmt: string | null;
   second: string | null;
   bezel: string | null;
+  /** CSS scale for the bracelet layer: the family's lug width / the bracelet image's width. */
+  braceletScale?: number;
 }
 
 export const LAYER_ORDER = ["bracelet", "case", "dial", "ring", "hour", "minute", "gmt", "second", "bezel"] as const;
@@ -120,6 +128,7 @@ export function buildPartsCatalog(manifest: Manifest, available: ReadonlySet<str
       band: pick(f.bracelet),
       ring: use((f.ring ?? []).find(ok) ?? null),
       gmt: use((f.gmt_hand ?? []).find(ok) ?? null),
+      lugMm: f.lug_mm ?? 20,
     };
     fam.live = fam.case.length > 0 && fam.dial.length > 0 && fam.hands.length > 0 && fam.band.length > 0;
     return fam;
@@ -128,7 +137,7 @@ export function buildPartsCatalog(manifest: Manifest, available: ReadonlySet<str
   const parts: Record<string, PartInfo> = {};
   for (const id of used) {
     const p = byId.get(id)!;
-    parts[id] = { id, type: p.type, label: p.label, priceEgp: Math.max(0, Math.round(prices[id] ?? 0)) };
+    parts[id] = { id, type: p.type, label: p.label, priceEgp: Math.max(0, Math.round(prices[id] ?? 0)), ...(p.width_mm ? { widthMm: p.width_mm } : {}) };
   }
   return { families, comingSoon: manifest.families_coming_soon.map((s) => s.replace(/\s*\(.*$/, "").trim()), parts };
 }
@@ -160,6 +169,7 @@ export function layersOf(cat: PartsCatalog, b: PhotoBuild): Layers {
     gmt: f?.gmt ?? null,
     second: h?.second ?? null,
     bezel: b.bezel || null,
+    braceletScale: f && b.band && cat.parts[b.band]?.widthMm ? f.lugMm / cat.parts[b.band].widthMm! : 1,
   };
 }
 

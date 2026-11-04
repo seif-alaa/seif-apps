@@ -59,7 +59,8 @@
     "bracelet_SKX_jubilee_steel",
     "bracelet_SKX_oyster_steel",
     "strap_SKX_leather_brown"
-   ]
+   ],
+   "lug_mm": 20
   },
   "PU": {
    "name": "Pure 36",
@@ -79,7 +80,8 @@
    "bracelet": [
     "bracelet_SKX_oyster_steel",
     "bracelet_SKX_jubilee_steel"
-   ]
+   ],
+   "lug_mm": 20
   },
   "DV": {
    "name": "Diver 40",
@@ -102,7 +104,8 @@
     "bracelet_SKX_oyster_steel",
     "bracelet_SKX_jubilee_steel",
     "strap_SKX_rubber_black"
-   ]
+   ],
+   "lug_mm": 20
   },
   "GM": {
    "name": "GMT 40",
@@ -127,7 +130,8 @@
    "bracelet": [
     "bracelet_SKX_jubilee_steel",
     "bracelet_SKX_oyster_steel"
-   ]
+   ],
+   "lug_mm": 20
   },
   "SKX": {
    "name": "SKX 42",
@@ -155,7 +159,8 @@
     "bracelet_SKX_jubilee_steel",
     "strap_SKX_rubber_black",
     "strap_SKX_leather_brown"
-   ]
+   ],
+   "lug_mm": 22
   }
  },
  "families_coming_soon": [
@@ -971,5 +976,10 @@
    "diameter_mm": 42,
    "note": "Right-hand bezel from 'Bare Steel Dive Watch Case and Bezel', isolated in Phase 1 (opening cut to 31 mm)."
   }
- ]
+ ],
+ "bracelet_canvas_px": [
+  1024,
+  2560
+ ],
+ "note_bracelet": "Bracelets/straps are normalised on a 1024x2560 canvas (centre 512,1280) at width_mm; the site scales them in CSS by families_live[family].lug_mm / width_mm."
 }

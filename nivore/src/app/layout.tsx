@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Newsreader } from "next/font/google";
+import { WelcomePopup } from "@/components/commerce/WelcomePopup";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -17,7 +18,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: "NIVORÉ Timepieces — Defined by Detail.", template: "%s — NIVORÉ" },
   description: "An independent watch atelier in Egypt. Compose your own automatic watch, part by part, or choose a finished NIVORÉ build.",
-  openGraph: { siteName: "NIVORÉ Timepieces", type: "website" },
+  openGraph: { siteName: "NIVORÉ Timepieces", type: "website", images: [{ url: "/products/product_1_diver.webp", width: 1122, height: 1402, alt: "A NIVORÉ watch on the atelier bench" }] },
+  twitter: { card: "summary_large_image" },
+  icons: { icon: "/icon.svg" },
 };
 
 export const viewport: Viewport = {
@@ -30,7 +33,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" dir="ltr" className={`${inter.variable} ${newsreader.variable}`}>
-      <body className="min-h-dvh bg-ivory text-espresso antialiased">{children}</body>
+      <body className="min-h-dvh bg-ivory text-espresso antialiased">{children}
+        <WelcomePopup />
+      </body>
     </html>
   );
 }

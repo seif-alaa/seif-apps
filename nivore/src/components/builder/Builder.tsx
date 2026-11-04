@@ -47,19 +47,20 @@ const STEP_COPY: Record<StepId, { title: string; verb: string; narrative: string
 const stepsFor = (f: FamilyInfo): StepId[] => ["model", "case", ...(f.bezel.length ? (["bezel"] as const) : []), "dial", "hands", "band", "review"];
 
 /** How a part's 1024 px canvas is zoomed inside a square thumbnail. */
-const THUMB: Record<string, { scale: number; origin: string }> = {
+const THUMB: Record<string, { scale: number; origin: string; shift?: string }> = {
   case: { scale: 1.1, origin: "50% 50%" },
   bezel: { scale: 1.1, origin: "50% 50%" },
   dial: { scale: 1.8, origin: "50% 50%" },
   hands: { scale: 3.4, origin: "50% 38%" },
-  band: { scale: 1.05, origin: "50% 50%" },
+  // bracelets/straps are 1024 x 2560: show the upper half (end link and strap) filling the square
+  band: { scale: 2.2, origin: "50% 25%", shift: "translateY(25%)" },
 };
 
 function PartThumb({ id, kind }: { id: string; kind: keyof typeof THUMB }) {
   const t = THUMB[kind];
-  const style: CSSProperties = { transform: `scale(${t.scale})`, transformOrigin: t.origin };
+  const style: CSSProperties = { transform: `${t.shift ?? ""} scale(${t.scale})`.trim(), transformOrigin: t.origin };
   // eslint-disable-next-line @next/next/no-img-element -- the part's own 1024 px webp, zoomed with CSS
-  return <img src={partSrc(id)} alt="" width={1024} height={1024} loading="lazy" decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-contain" style={style} />;
+  return <img src={partSrc(id)} alt="" width={1024} height={kind === "band" ? 2560 : 1024} loading="lazy" decoding="async" draggable={false} className="absolute inset-[4%] h-[92%] w-[92%] object-contain" style={style} />;
 }
 
 export function Builder({ catalog, assemblyMinor, initial, fromUrl, editItemId, checkoutOpen }: BuilderProps) {
@@ -282,7 +283,7 @@ export function Builder({ catalog, assemblyMinor, initial, fromUrl, editItemId, 
             {reference}
           </p>
         </div>
-        <div className="absolute inset-0 pb-6 pt-14 md:pt-10 lg:px-10 lg:pb-14 lg:pt-16">
+        <div className="absolute inset-0">
           <Stage layers={layers} camera={copy.camera} live={live} label={`${name}, illustrative rendering`} />
         </div>
         <div className="absolute bottom-3 right-4 z-10 md:bottom-6 md:right-8">

@@ -38,7 +38,27 @@ export async function downloadBuildImage(layers: Layers, opts: { name: string; r
     ctx.restore();
   };
   const a = handAngles(DEFAULT_TIME.h, DEFAULT_TIME.m, DEFAULT_TIME.s);
-  draw(layers.bracelet);
+  const br = layers.bracelet ? loaded.get(layers.bracelet) : null;
+  if (br) {
+    // Tall bracelet canvas (1024 x 2560, centred), scaled to the lug width and faded at the ends.
+    const off = document.createElement("canvas");
+    off.width = S;
+    off.height = S;
+    const o = off.getContext("2d")!;
+    const k = layers.braceletScale ?? 1;
+    const bw = S * k;
+    const bh = (br.naturalHeight / br.naturalWidth) * bw;
+    o.drawImage(br, S / 2 - bw / 2, S / 2 - bh / 2, bw, bh);
+    const m = o.createLinearGradient(0, 0, 0, S);
+    m.addColorStop(0, "rgba(0,0,0,0)");
+    m.addColorStop(0.12, "rgba(0,0,0,1)");
+    m.addColorStop(0.88, "rgba(0,0,0,1)");
+    m.addColorStop(1, "rgba(0,0,0,0)");
+    o.globalCompositeOperation = "destination-in";
+    o.fillStyle = m;
+    o.fillRect(0, 0, S, S);
+    ctx.drawImage(off, 0, 0);
+  }
   draw(layers.case, 0, true);
   draw(layers.dial);
   draw(layers.ring);

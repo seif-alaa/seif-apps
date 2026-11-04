@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DEFAULT_POLICY } from "@/config/policies";
 import { POLICY_KEYS, type PolicyKey } from "@/domain/settings";
 import { getSettings } from "@/server/catalog";
 
@@ -17,7 +18,8 @@ export default async function InfoPage({ params }: { params: Params }) {
   const { slug } = await params;
   if (!POLICY_KEYS.includes(slug as PolicyKey)) notFound();
   const s = await getSettings();
-  const policy = s.policies[slug as PolicyKey];
+  const stored = s.policies[slug as PolicyKey];
+  const policy = { ...stored, body: stored.body ?? DEFAULT_POLICY[slug as PolicyKey] ?? null };
   return (
     <article className="mx-auto max-w-2xl px-5 pt-14 md:px-10 md:pt-20">
       <h1 className="display text-[2.8rem] md:text-[3.6rem]">{policy.title}</h1>

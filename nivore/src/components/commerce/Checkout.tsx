@@ -8,6 +8,7 @@ import { formatEGP } from "@/domain/money";
 import { PAYMENT_METHOD_LABEL, type PaymentMethod } from "@/domain/models";
 import { useBag } from "@/lib/cart";
 import { cn } from "@/lib/cn";
+import { savedWelcome } from "@/lib/welcome";
 import { toCheckoutItems, useQuote } from "./useQuote";
 
 export interface CheckoutConfig {
@@ -32,6 +33,17 @@ export function CheckoutForm({ cfg }: { cfg: CheckoutConfig }) {
   const [governorate, setGovernorate] = useState<string>("");
   const [promo, setPromo] = useState("");
   const [appliedPromo, setAppliedPromo] = useState("");
+  const [typed, setTyped] = useState({ email: "", phone: "" });
+  const [savedContact, setSavedContact] = useState<string | null>(null);
+  // The first-visit code (saved by the popup) is applied automatically.
+  useEffect(() => {
+    const w = savedWelcome();
+    if (w) {
+      setPromo(w.code);
+      setAppliedPromo(w.code);
+      setSavedContact(w.contact);
+    }
+  }, []);
   const [payment, setPayment] = useState<PaymentMethod | "">("");
   const [errors, setErrors] = useState<Fields>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -39,7 +51,7 @@ export function CheckoutForm({ cfg }: { cfg: CheckoutConfig }) {
   const idempotencyKey = useRef<string>("");
   if (!idempotencyKey.current && typeof crypto !== "undefined") idempotencyKey.current = crypto.randomUUID?.() ?? String(Math.random()).slice(2);
 
-  const { quote, loading } = useQuote(items, { promoCode: appliedPromo || undefined, method, governorate: governorate || null }, hydrated);
+  const { quote, loading } = useQuote(items, { promoCode: appliedPromo || undefined, method, governorate: governorate || null, contacts: [typed.email, typed.phone].filter(Boolean).length ? [typed.email, typed.phone].filter(Boolean) : savedContact ? [savedContact] : [] }, hydrated);
 
   const payments = useMemo(() => {
     const list: { id: PaymentMethod; note: string }[] = [];
@@ -150,8 +162,8 @@ export function CheckoutForm({ cfg }: { cfg: CheckoutConfig }) {
           <legend className="display mb-5 text-[1.8rem]">Your details</legend>
           {input("name", "Full name", { autoComplete: "name", required: true })}
           <div className="grid gap-5 sm:grid-cols-2">
-            {input("phone", "Mobile number", { type: "tel", inputMode: "tel", autoComplete: "tel", placeholder: "010 1234 5678", required: true })}
-            {input("email", "Email", { type: "email", autoComplete: "email", required: true })}
+            {input("phone", "Mobile number", { type: "tel", inputMode: "tel", autoComplete: "tel", placeholder: "010 1234 5678", required: true, onChange: (e) => setTyped((x) => ({ ...x, phone: e.target.value })) })}
+            {input("email", "Email", { type: "email", autoComplete: "email", required: true, onChange: (e) => setTyped((x) => ({ ...x, email: e.target.value })) })}
           </div>
           {input("altPhone", "Another number (optional)", { type: "tel", inputMode: "tel" })}
         </fieldset>

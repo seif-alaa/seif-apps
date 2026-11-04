@@ -302,3 +302,17 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Build stage: one shared warm light-grey backdrop; no borders or boxes. The watch box is the square
+   reference (--box); the stage is taller than it so the strap can run above and below the case. */
+.stage {
+  --stage-r: 1.25;
+  --box: min(100cqw, calc(100cqh / var(--stage-r)));
+  background: radial-gradient(ellipse 85% 65% at 50% 42%, #f4f1ec 0%, #e9e5dd 55%, #ddd8ce 100%);
+}
+@media (min-width: 1024px) {
+  .stage { --stage-r: 1.7; }
+}
+.thumb-bg {
+  background: radial-gradient(ellipse 85% 70% at 50% 42%, #f4f1ec 0%, #e9e5dd 60%, #ddd8ce 100%);
+}

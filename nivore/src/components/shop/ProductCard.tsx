@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { formatEGP } from "@/domain/money";
 import type { Product } from "@/domain/models";
@@ -14,7 +13,22 @@ export function ProductCard({ product, priority = false }: { product: Product; p
     <Link href={`/timepieces/${product.slug}`} className="group block" data-testid={`product-${product.slug}`}>
       {photo && (
         <div className="relative aspect-[4/5] overflow-hidden bg-cream">
-          <Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw" className="object-cover transition-transform duration-700 ease-[var(--ease-settle)] group-hover:scale-[1.02]" priority={priority} />
+          {/* Product photos are already 4:5 WebP; object-position keeps the watch centred if a different crop is ever uploaded. */}
+          <picture>
+            <source type="image/webp" srcSet={photo.src} />
+            {/* eslint-disable-next-line @next/next/no-img-element -- <picture> with WebP source, fixed width/height to avoid layout shift */}
+            <img
+              src={photo.src}
+              alt={photo.alt}
+              width={photo.width || 1122}
+              height={photo.height || 1402}
+              loading={priority ? "eager" : "lazy"}
+              fetchPriority={priority ? "high" : "auto"}
+              decoding="async"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[var(--ease-settle)] group-hover:scale-[1.02]"
+              style={{ objectPosition: "50% 55%" }}
+            />
+          </picture>
           {soldOut && <span className="absolute left-3 top-3 bg-ivory px-2 py-1 text-[10px] uppercase tracking-[0.16em]">Sold</span>}
         </div>
       )}

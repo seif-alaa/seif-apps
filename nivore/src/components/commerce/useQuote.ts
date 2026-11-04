@@ -14,7 +14,7 @@ export function toCheckoutItems(items: BagItem[]) {
 }
 
 /** Server-authoritative price for the bag; debounced, cancels stale requests. */
-export function useQuote(items: BagItem[], opts: { promoCode?: string; method?: string | null; governorate?: string | null }, enabled = true) {
+export function useQuote(items: BagItem[], opts: { promoCode?: string; method?: string | null; governorate?: string | null; contacts?: string[] }, enabled = true) {
   const [quote, setQuote] = useState<QuoteResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -1,5 +1,6 @@
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { getContent, getSettings, isDevDriver } from "@/server/catalog";
 
 /** Cached and regenerated at most every minute; admin edits revalidate immediately. */
@@ -25,6 +26,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       <Header />
       <main id="main">{children}</main>
       <Footer content={content} settings={settings} />
+      <WhatsAppButton />
     </>
   );
 }

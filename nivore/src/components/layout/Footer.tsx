@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { MinuteTrack, Monogram, Wordmark } from "@/components/brand/Brand";
+import { CONTACT_EMAIL, INSTAGRAM_URL, whatsappLink } from "@/config/site";
 import type { Content, Settings } from "@/domain/settings";
 
 const COLUMNS = [
   { title: "Atelier", links: [["Timepieces", "/timepieces"], ["Build your watch", "/build"], ["Rare pieces", "/rare-pieces"], ["The Atelier", "/atelier"], ["Saved compositions", "/saved"]] },
-  { title: "Ordering", links: [["Order status", "/order-status"], ["Shipping", "/info/shipping"], ["Returns & cancellations", "/info/returns"], ["Questions", "/faq"]] },
+  { title: "Ordering", links: [["Order status", "/order-status"], ["Shipping & returns", "/info/shipping"], ["Returns & cancellations", "/info/returns"], ["Questions", "/faq"]] },
   { title: "Care & terms", links: [["Care guide", "/info/care"], ["Privacy", "/info/privacy"], ["Terms & conditions", "/info/terms"], ["Contact & bespoke", "/contact"]] },
 ] as const;
 
@@ -20,15 +21,15 @@ export function Footer({ content, settings }: { content: Content; settings: Sett
             <p className="serif text-2xl font-light italic">{content.footer.tagline}</p>
             <p className="max-w-xs text-sm text-taupe-ink">
               {b.city}
-              {b.email && (
-                <>
-                  <br />
-                  <a className="link-underline" href={`mailto:${b.email}`}>
-                    {b.email}
-                  </a>
-                </>
-              )}
+              <br />
+              <a className="link-underline" href={`mailto:${b.email || CONTACT_EMAIL}`}>
+                {b.email || CONTACT_EMAIL}
+              </a>
             </p>
+            <ul className="flex gap-5 text-sm">
+              <li><a className="link-underline" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">Instagram</a></li>
+              <li><a className="link-underline" href={whatsappLink()} target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
+            </ul>
           </div>
           {COLUMNS.map((col) => (
             <div key={col.title}>
@@ -46,7 +47,10 @@ export function Footer({ content, settings }: { content: Content; settings: Sett
           ))}
         </div>
         <div className="flex flex-col gap-6 border-t border-line py-8 md:flex-row md:items-end md:justify-between">
-          <p className="max-w-3xl text-xs leading-relaxed text-taupe-ink">{content.footer.disclosure}</p>
+          <p className="max-w-3xl text-xs leading-relaxed text-taupe-ink">
+            {!/seiko/i.test(content.footer.disclosure) && <>NIVORÉ is independent and not affiliated with Seiko. </>}
+            {content.footer.disclosure}
+          </p>
           <div className="flex items-center gap-4 text-taupe">
             <span className="text-xs text-taupe-ink">© {new Date().getFullYear()} {b.displayName}</span>
             <Monogram size={34} />

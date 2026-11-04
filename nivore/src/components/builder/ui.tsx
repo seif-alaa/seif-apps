@@ -77,7 +77,7 @@ export function OptionCard({
         disabled && "cursor-not-allowed bg-cream/40 hover:border-line",
       )}
     >
-      {thumb && <span className={cn("relative block aspect-square w-full overflow-hidden bg-cream/60", disabled && "opacity-45 grayscale-[35%]")}>{thumb}</span>}
+      {thumb && <span className={cn("thumb-bg relative block aspect-square w-full overflow-hidden", disabled && "opacity-45 grayscale-[35%]")}>{thumb}</span>}
       <span className="flex min-w-0 flex-1 flex-col pt-2.5">
         <span className="flex items-start justify-between gap-2">
           <span className={cn("text-[13px] leading-snug", disabled ? "text-taupe-ink" : "text-espresso")}>{title}</span>
