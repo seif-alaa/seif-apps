@@ -1,0 +1,985 @@
+{
+ "canvas_px": 1024,
+ "px_per_mm": 19.5,
+ "centre": [
+  512,
+  512
+ ],
+ "layer_order": [
+  "bracelet_bottom",
+  "case_shadow(css)",
+  "case",
+  "date_wheel(code)",
+  "dial",
+  "ring",
+  "hand_hour",
+  "hand_minute",
+  "hand_gmt",
+  "hand_second",
+  "crystal_glare(css)",
+  "bezel",
+  "bracelet_top"
+ ],
+ "families_live": {
+  "CL": {
+   "name": "Classic 36",
+   "movement": "NH35 (date)",
+   "case": [
+    "case_CL_steel",
+    "case_CL_rosegold",
+    "case_CL_yellowgold"
+   ],
+   "bezel": [
+    "bezel_CL_fluted_steel",
+    "bezel_CL_fluted_yellowgold",
+    "bezel_CL_fluted_rosegold",
+    "bezel_PU_smooth_steel"
+   ],
+   "dial": [
+    "dial_CL_roman_silver",
+    "dial_CL_roman_ice-blue",
+    "dial_CL_roman_olive",
+    "dial_CL_arabic_azure",
+    "dial_CL_arabic_baby-blue",
+    "dial_CL_arabic_midnight-blue",
+    "dial_CL_arabic_black",
+    "dial_CL_arabic_olive",
+    "dial_CL_arabic_olive_rosegold",
+    "dial_CL_lume_black",
+    "dial_CL_stick_navy"
+   ],
+   "hands": [
+    "hands_CL_steel",
+    "hands_CL_rosegold",
+    "hands_CL_yellowgold"
+   ],
+   "bracelet": [
+    "bracelet_CL_jubilee_halfgold",
+    "bracelet_CL_jubilee_halfrosegold",
+    "bracelet_SKX_jubilee_steel",
+    "bracelet_SKX_oyster_steel",
+    "strap_SKX_leather_brown"
+   ],
+   "lug_mm": 20
+  },
+  "PU": {
+   "name": "Pure 36",
+   "movement": "NH38 (no date)",
+   "case": [
+    "case_CL_steel"
+   ],
+   "bezel": [
+    "bezel_PU_smooth_steel"
+   ],
+   "dial": [
+    "dial_PU_stick_tiffany"
+   ],
+   "hands": [
+    "hands_CL_steel"
+   ],
+   "bracelet": [
+    "bracelet_SKX_oyster_steel",
+    "bracelet_SKX_jubilee_steel"
+   ],
+   "lug_mm": 20
+  },
+  "DV": {
+   "name": "Diver 40",
+   "movement": "NH35 (date)",
+   "case": [
+    "case_DV_steel"
+   ],
+   "bezel": [
+    "bezel_DV_green_ceramic",
+    "bezel_DV_gold_blue_ceramic"
+   ],
+   "dial": [
+    "dial_DV_lume_black"
+   ],
+   "hands": [
+    "hands_SKX_mercedes",
+    "hands_DV_gold_mercedes"
+   ],
+   "bracelet": [
+    "bracelet_SKX_oyster_steel",
+    "bracelet_SKX_jubilee_steel",
+    "strap_SKX_rubber_black"
+   ],
+   "lug_mm": 20
+  },
+  "GM": {
+   "name": "GMT 40",
+   "movement": "NH34 (GMT)",
+   "case": [
+    "case_DV_steel"
+   ],
+   "bezel": [
+    "bezel_GM_black_grey",
+    "bezel_GM_blue_black",
+    "bezel_GM_brown_black_gold"
+   ],
+   "dial": [
+    "dial_GM_lume_black"
+   ],
+   "hands": [
+    "hands_SKX_mercedes"
+   ],
+   "gmt_hand": [
+    "hands_GM_gmt_red"
+   ],
+   "bracelet": [
+    "bracelet_SKX_jubilee_steel",
+    "bracelet_SKX_oyster_steel"
+   ],
+   "lug_mm": 20
+  },
+  "SKX": {
+   "name": "SKX 42",
+   "movement": "NH35 (date)",
+   "case": [
+    "case_SKX_steel"
+   ],
+   "bezel": [
+    "bezel_SKX_dive_black"
+   ],
+   "dial": [
+    "dial_SKX_black",
+    "dial_SKX_silver",
+    "dial_SKX_emerald",
+    "dial_SKX_navy"
+   ],
+   "ring": [
+    "ring_SKX_brushed"
+   ],
+   "hands": [
+    "hands_SKX_mercedes"
+   ],
+   "bracelet": [
+    "bracelet_SKX_oyster_steel",
+    "bracelet_SKX_jubilee_steel",
+    "strap_SKX_rubber_black",
+    "strap_SKX_leather_brown"
+   ],
+   "lug_mm": 22
+  }
+ },
+ "families_coming_soon": [
+  "Classic Lady 31 (case + bezels done, dials missing)",
+  "Sailor 40 (case + bezels done, dials missing)",
+  "Chrono 40 (cases + bezels done, dials/hands missing)",
+  "Octa 40 (case + 2 hands done)",
+  "Square 39 (case + hands done)",
+  "Honeycomb 40 (case done)"
+ ],
+ "parts": [
+  {
+   "id": "case_CL_steel",
+   "src": "01_cases/case_CL_steel.png",
+   "type": "case",
+   "family": "CL",
+   "label": "Classic 36 case · steel",
+   "fit": "case",
+   "diameter_mm": 36,
+   "crown": true
+  },
+  {
+   "id": "case_CL_rosegold",
+   "src": "01_cases/case_CL_rosegold.png",
+   "type": "case",
+   "family": "CL",
+   "label": "Classic 36 case · rosegold",
+   "fit": "case",
+   "diameter_mm": 36,
+   "crown": true
+  },
+  {
+   "id": "case_DV_steel",
+   "src": "01_cases/case_DV_steel.png",
+   "type": "case",
+   "family": "DV",
+   "label": "Diver 40 case · steel",
+   "fit": "case",
+   "diameter_mm": 40,
+   "crown": true
+  },
+  {
+   "id": "bezel_CL_fluted_steel",
+   "src": "02_bezels/bezel_CL_fluted_steel.png",
+   "type": "bezel",
+   "family": "CL",
+   "label": "Classic 36 bezel · fluted steel",
+   "fit": "round",
+   "diameter_mm": 36
+  },
+  {
+   "id": "bezel_CL_fluted_yellowgold",
+   "src": "02_bezels/bezel_CL_fluted_yellowgold.png",
+   "type": "bezel",
+   "family": "CL",
+   "label": "Classic 36 bezel · fluted yellowgold",
+   "fit": "round",
+   "diameter_mm": 36
+  },
+  {
+   "id": "bezel_CL_fluted_rosegold",
+   "src": "02_bezels/bezel_CL_fluted_rosegold.png",
+   "type": "bezel",
+   "family": "CL",
+   "label": "Classic 36 bezel · fluted rosegold",
+   "fit": "round",
+   "diameter_mm": 36
+  },
+  {
+   "id": "bezel_PU_smooth_steel",
+   "src": "02_bezels/bezel_PU_smooth_steel.png",
+   "type": "bezel",
+   "family": "PU",
+   "label": "Pure 36 bezel · smooth steel",
+   "fit": "round",
+   "diameter_mm": 36
+  },
+  {
+   "id": "bezel_DV_green_ceramic",
+   "src": "02_bezels/bezel_DV_green_ceramic.png",
+   "type": "bezel",
+   "family": "DV",
+   "label": "Diver 40 bezel · green ceramic",
+   "fit": "round",
+   "diameter_mm": 40
+  },
+  {
+   "id": "bezel_GM_black_grey",
+   "src": "02_bezels/bezel_GM_black_grey.png",
+   "type": "bezel",
+   "family": "GM",
+   "label": "GMT 40 bezel · black grey",
+   "fit": "round",
+   "diameter_mm": 40
+  },
+  {
+   "id": "bezel_GM_blue_black",
+   "src": "02_bezels/bezel_GM_blue_black.png",
+   "type": "bezel",
+   "family": "GM",
+   "label": "GMT 40 bezel · blue black",
+   "fit": "round",
+   "diameter_mm": 40
+  },
+  {
+   "id": "hands_CL_steel_hour",
+   "src": "04_hands/hands_CL_steel_hour.png",
+   "type": "hand",
+   "family": "CL",
+   "label": "Classic 36 hands · steel · hour",
+   "fit": "hand",
+   "hand": "hour",
+   "length_px": 166,
+   "set": "hands_CL_steel"
+  },
+  {
+   "id": "hands_CL_steel_minute",
+   "src": "04_hands/hands_CL_steel_minute.png",
+   "type": "hand",
+   "family": "CL",
+   "label": "Classic 36 hands · steel · minute",
+   "fit": "hand",
+   "hand": "minute",
+   "length_px": 244,
+   "set": "hands_CL_steel"
+  },
+  {
+   "id": "hands_CL_steel_second",
+   "src": "04_hands/hands_CL_steel_second.png",
+   "type": "hand",
+   "family": "CL",
+   "label": "Classic 36 hands · steel · second",
+   "fit": "hand",
+   "hand": "second",
+   "length_px": 254,
+   "set": "hands_CL_steel"
+  },
+  {
+   "id": "hands_CL_rosegold_hour",
+   "src": "04_hands/hands_CL_rosegold_hour.png",
+   "type": "hand",
+   "family": "CL",
+   "label": "Classic 36 hands · rosegold · hour",
+   "fit": "hand",
+   "hand": "hour",
+   "length_px": 166,
+   "set": "hands_CL_rosegold"
+  },
+  {
+   "id": "hands_CL_rosegold_minute",
+   "src": "04_hands/hands_CL_rosegold_minute.png",
+   "type": "hand",
+   "family": "CL",
+   "label": "Classic 36 hands · rosegold · minute",
+   "fit": "hand",
+   "hand": "minute",
+   "length_px": 244,
+   "set": "hands_CL_rosegold"
+  },
+  {
+   "id": "hands_CL_rosegold_second",
+   "src": "04_hands/hands_CL_rosegold_second.png",
+   "type": "hand",
+   "family": "CL",
+   "label": "Classic 36 hands · rosegold · second",
+   "fit": "hand",
+   "hand": "second",
+   "length_px": 254,
+   "set": "hands_CL_rosegold"
+  },
+  {
+   "id": "hands_GM_gmt_red",
+   "src": "04_hands/hands_GM_gmt_red.png",
+   "type": "hand",
+   "family": "GM",
+   "label": "GMT 40 · GMT hand · red",
+   "fit": "hand",
+   "hand": "gmt",
+   "length_px": 250,
+   "set": "hands_GM_gmt_red"
+  },
+  {
+   "id": "bracelet_CL_jubilee_halfgold",
+   "src": "05_bracelets_straps/bracelet_CL_jubilee_halfgold.png",
+   "type": "bracelet",
+   "family": "CL",
+   "label": "Classic 36 bracelet · 5-link, half gold",
+   "fit": "bracelet",
+   "width_mm": 20
+  },
+  {
+   "id": "bracelet_CL_jubilee_halfrosegold",
+   "src": "05_bracelets_straps/bracelet_CL_jubilee_halfrosegold.png",
+   "type": "bracelet",
+   "family": "CL",
+   "label": "Classic 36 bracelet · 5-link, half rose gold",
+   "fit": "bracelet",
+   "width_mm": 20
+  },
+  {
+   "id": "dial_CL_roman_silver",
+   "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_roman_silver.png",
+   "type": "dial",
+   "family": "CL",
+   "label": "Classic 36 dial · roman · silver",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_CL_roman_ice-blue",
+   "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_roman_ice-blue.png",
+   "type": "dial",
+   "family": "CL",
+   "label": "Classic 36 dial · roman · ice blue",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_CL_roman_olive",
+   "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_roman_olive.png",
+   "type": "dial",
+   "family": "CL",
+   "label": "Classic 36 dial · roman · olive",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_CL_arabic_azure",
+   "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_arabic_azure.png",
+   "type": "dial",
+   "family": "CL",
+   "label": "Classic 36 dial · arabic · azure",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_CL_arabic_baby-blue",
+   "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_arabic_baby-blue.png",
+   "type": "dial",
+   "family": "CL",
+   "label": "Classic 36 dial · arabic · baby blue",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_CL_arabic_midnight-blue",
+   "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_arabic_midnight-blue.png",
+   "type": "dial",
+   "family": "CL",
+   "label": "Classic 36 dial · arabic · midnight blue",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_CL_arabic_black",
+   "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_arabic_black.png",
+   "type": "dial",
+   "family": "CL",
+   "label": "Classic 36 dial · arabic · black",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_CL_arabic_olive",
+   "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_arabic_olive.png",
+   "type": "dial",
+   "family": "CL",
+   "label": "Classic 36 dial · arabic · olive",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_CL_arabic_olive_rosegold",
+   "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_arabic_olive_rosegold.png",
+   "type": "dial",
+   "family": "CL",
+   "label": "Classic 36 dial · arabic · olive · rosegold",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_CL_lume_black",
+   "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_lume_black.png",
+   "type": "dial",
+   "family": "CL",
+   "label": "Classic 36 dial · lume · black",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_CL_stick_navy",
+   "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_stick_navy.png",
+   "type": "dial",
+   "family": "CL",
+   "label": "Classic 36 dial · stick · navy",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_PU_stick_tiffany",
+   "src": "03_dials/Pure 36 (OP-style)/dial_PU_stick_tiffany.png",
+   "type": "dial",
+   "family": "PU",
+   "label": "Pure 36 dial · stick · tiffany",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "no-date"
+  },
+  {
+   "id": "dial_DV_lume_black",
+   "src": "03_dials/Diver 40 (Sub-style)/dial_DV_lume_black.png",
+   "type": "dial",
+   "family": "DV",
+   "label": "Diver 40 dial · lume · black",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_GM_lume_black",
+   "src": "03_dials/GMT 40/dial_GM_lume_black.png",
+   "type": "dial",
+   "family": "GM",
+   "label": "GMT 40 dial · lume · black",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "case_CL_yellowgold",
+   "src": "01_cases/case_CL_yellowgold.png",
+   "type": "case",
+   "family": "CL",
+   "label": "Classic 36 case · yellowgold",
+   "fit": "case",
+   "diameter_mm": 36,
+   "crown": true
+  },
+  {
+   "id": "case_LC_steel",
+   "src": "01_cases/case_LC_steel.png",
+   "type": "case",
+   "family": "LC",
+   "label": "Classic Lady 31 case · steel",
+   "fit": "case",
+   "diameter_mm": 31,
+   "crown": true
+  },
+  {
+   "id": "case_SA_steel",
+   "src": "01_cases/case_SA_steel.png",
+   "type": "case",
+   "family": "SA",
+   "label": "Sailor 40 case · steel",
+   "fit": "case",
+   "diameter_mm": 40,
+   "crown": true
+  },
+  {
+   "id": "case_CH_steel",
+   "src": "01_cases/case_CH_steel.png",
+   "type": "case",
+   "family": "CH",
+   "label": "Chrono 40 case · steel",
+   "fit": "case",
+   "diameter_mm": 40,
+   "crown": true
+  },
+  {
+   "id": "case_CH_rosegold",
+   "src": "01_cases/case_CH_rosegold.png",
+   "type": "case",
+   "family": "CH",
+   "label": "Chrono 40 case · rosegold",
+   "fit": "case",
+   "diameter_mm": 40,
+   "crown": true
+  },
+  {
+   "id": "case_OC_steel",
+   "src": "01_cases/case_OC_steel.png",
+   "type": "case",
+   "family": "OC",
+   "label": "Octa 40 case · steel",
+   "fit": "case",
+   "diameter_mm": 40,
+   "crown": true
+  },
+  {
+   "id": "case_SQ_steel",
+   "src": "01_cases/case_SQ_steel.png",
+   "type": "case",
+   "family": "SQ",
+   "label": "Square 39 case · steel",
+   "fit": "case",
+   "diameter_mm": 39,
+   "crown": true
+  },
+  {
+   "id": "case_HC_steel",
+   "src": "01_cases/case_HC_steel.png",
+   "type": "case",
+   "family": "HC",
+   "label": "Honeycomb 40 case · steel",
+   "fit": "case",
+   "diameter_mm": 40,
+   "crown": true
+  },
+  {
+   "id": "bezel_LC_fluted_steel",
+   "src": "02_bezels/bezel_LC_fluted_steel.png",
+   "type": "bezel",
+   "family": "LC",
+   "label": "Classic Lady 31 bezel · fluted steel",
+   "fit": "round",
+   "diameter_mm": 31
+  },
+  {
+   "id": "bezel_LC_fluted_yellowgold",
+   "src": "02_bezels/bezel_LC_fluted_yellowgold.png",
+   "type": "bezel",
+   "family": "LC",
+   "label": "Classic Lady 31 bezel · fluted yellowgold",
+   "fit": "round",
+   "diameter_mm": 31
+  },
+  {
+   "id": "bezel_LC_fluted_rosegold",
+   "src": "02_bezels/bezel_LC_fluted_rosegold.png",
+   "type": "bezel",
+   "family": "LC",
+   "label": "Classic Lady 31 bezel · fluted rosegold",
+   "fit": "round",
+   "diameter_mm": 31
+  },
+  {
+   "id": "bezel_DV_gold_blue_ceramic",
+   "src": "02_bezels/bezel_DV_gold_blue_ceramic.png",
+   "type": "bezel",
+   "family": "DV",
+   "label": "Diver 40 bezel · gold blue ceramic",
+   "fit": "round",
+   "diameter_mm": 40
+  },
+  {
+   "id": "bezel_GM_brown_black_gold",
+   "src": "02_bezels/bezel_GM_brown_black_gold.png",
+   "type": "bezel",
+   "family": "GM",
+   "label": "GMT 40 bezel · brown black gold",
+   "fit": "round",
+   "diameter_mm": 40
+  },
+  {
+   "id": "bezel_SA_raised_steel",
+   "src": "02_bezels/bezel_SA_raised_steel.png",
+   "type": "bezel",
+   "family": "SA",
+   "label": "Sailor 40 bezel · raised steel",
+   "fit": "round",
+   "diameter_mm": 40
+  },
+  {
+   "id": "bezel_SA_raised_black",
+   "src": "02_bezels/bezel_SA_raised_black.png",
+   "type": "bezel",
+   "family": "SA",
+   "label": "Sailor 40 bezel · raised black",
+   "fit": "round",
+   "diameter_mm": 40
+  },
+  {
+   "id": "bezel_CH_tachy_black",
+   "src": "02_bezels/bezel_CH_tachy_black.png",
+   "type": "bezel",
+   "family": "CH",
+   "label": "Chrono 40 bezel · tachy black",
+   "fit": "round",
+   "diameter_mm": 40
+  },
+  {
+   "id": "bezel_CH_tachy_brown_rosegold",
+   "src": "02_bezels/bezel_CH_tachy_brown_rosegold.png",
+   "type": "bezel",
+   "family": "CH",
+   "label": "Chrono 40 bezel · tachy brown rosegold",
+   "fit": "round",
+   "diameter_mm": 40
+  },
+  {
+   "id": "hands_CL_yellowgold_hour",
+   "src": "04_hands/hands_CL_yellowgold_hour.png",
+   "type": "hand",
+   "family": "CL",
+   "label": "Classic 36 hands · yellowgold · hour",
+   "fit": "hand",
+   "hand": "hour",
+   "length_px": 166,
+   "set": "hands_CL_yellowgold"
+  },
+  {
+   "id": "hands_CL_yellowgold_minute",
+   "src": "04_hands/hands_CL_yellowgold_minute.png",
+   "type": "hand",
+   "family": "CL",
+   "label": "Classic 36 hands · yellowgold · minute",
+   "fit": "hand",
+   "hand": "minute",
+   "length_px": 244,
+   "set": "hands_CL_yellowgold"
+  },
+  {
+   "id": "hands_CL_yellowgold_second",
+   "src": "04_hands/hands_CL_yellowgold_second.png",
+   "type": "hand",
+   "family": "CL",
+   "label": "Classic 36 hands · yellowgold · second",
+   "fit": "hand",
+   "hand": "second",
+   "length_px": 254,
+   "set": "hands_CL_yellowgold"
+  },
+  {
+   "id": "hands_DV_gold_mercedes_hour",
+   "src": "04_hands/hands_DV_gold_mercedes_hour.png",
+   "type": "hand",
+   "family": "DV",
+   "label": "Diver 40 hands · gold mercedes · hour",
+   "fit": "hand",
+   "hand": "hour",
+   "length_px": 166,
+   "set": "hands_DV_gold_mercedes"
+  },
+  {
+   "id": "hands_DV_gold_mercedes_minute",
+   "src": "04_hands/hands_DV_gold_mercedes_minute.png",
+   "type": "hand",
+   "family": "DV",
+   "label": "Diver 40 hands · gold mercedes · minute",
+   "fit": "hand",
+   "hand": "minute",
+   "length_px": 244,
+   "set": "hands_DV_gold_mercedes"
+  },
+  {
+   "id": "hands_DV_gold_mercedes_second",
+   "src": "04_hands/hands_DV_gold_mercedes_second.png",
+   "type": "hand",
+   "family": "DV",
+   "label": "Diver 40 hands · gold mercedes · second",
+   "fit": "hand",
+   "hand": "second",
+   "length_px": 254,
+   "set": "hands_DV_gold_mercedes"
+  },
+  {
+   "id": "hands_SQ_blued_sword_hour",
+   "src": "04_hands/hands_SQ_blued_sword_hour.png",
+   "type": "hand",
+   "family": "SQ",
+   "label": "Square 39 hands · blued sword · hour",
+   "fit": "hand",
+   "hand": "hour",
+   "length_px": 150,
+   "set": "hands_SQ_blued_sword"
+  },
+  {
+   "id": "hands_SQ_blued_sword_minute",
+   "src": "04_hands/hands_SQ_blued_sword_minute.png",
+   "type": "hand",
+   "family": "SQ",
+   "label": "Square 39 hands · blued sword · minute",
+   "fit": "hand",
+   "hand": "minute",
+   "length_px": 230,
+   "set": "hands_SQ_blued_sword"
+  },
+  {
+   "id": "hands_SQ_blued_sword_second",
+   "src": "04_hands/hands_SQ_blued_sword_second.png",
+   "type": "hand",
+   "family": "SQ",
+   "label": "Square 39 hands · blued sword · second",
+   "fit": "hand",
+   "hand": "second",
+   "length_px": 254,
+   "set": "hands_SQ_blued_sword"
+  },
+  {
+   "id": "hands_OC_baton_lume_hour",
+   "src": "04_hands/hands_OC_baton_lume_hour.png",
+   "type": "hand",
+   "family": "OC",
+   "label": "Octa 40 hands · baton lume · hour",
+   "fit": "hand",
+   "hand": "hour",
+   "length_px": 160,
+   "set": "hands_OC_baton_lume"
+  },
+  {
+   "id": "hands_OC_baton_lume_minute",
+   "src": "04_hands/hands_OC_baton_lume_minute.png",
+   "type": "hand",
+   "family": "OC",
+   "label": "Octa 40 hands · baton lume · minute",
+   "fit": "hand",
+   "hand": "minute",
+   "length_px": 240,
+   "set": "hands_OC_baton_lume"
+  },
+  {
+   "id": "case_SKX_steel",
+   "src": "01_cases/SKX42 · skx_42mm_stainless_case_1024.png",
+   "type": "case",
+   "family": "SKX",
+   "label": "SKX 42 case · steel",
+   "fit": "case",
+   "diameter_mm": 42,
+   "crown": true
+  },
+  {
+   "id": "case_SKX_steel_v2",
+   "src": "01_cases/SKX42 · Empty Stainless Steel Diver Watch Case.png",
+   "type": "case",
+   "family": "SKX",
+   "label": "SKX 42 case · steel (alt)",
+   "fit": "case",
+   "diameter_mm": 42,
+   "crown": true,
+   "note": "alternative; keep the better of the two"
+  },
+  {
+   "id": "case_SKX_steel_withbezel",
+   "src": "01_cases/SKX42 · Bare Steel Dive Watch Case and Bezel.png",
+   "type": "case",
+   "family": "SKX",
+   "label": "SKX 42 case · steel with bezel",
+   "fit": "case",
+   "diameter_mm": 42,
+   "crown": true,
+   "note": "may already include a bezel; use only if it looks right"
+  },
+  {
+   "id": "dial_SKX_black",
+   "src": "03_dials/SKX 42 (first set)/SKX42 · Seiko-Style Black Diver Watch Dial.png",
+   "type": "dial",
+   "family": "SKX",
+   "label": "SKX 42 dial · black",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_SKX_silver",
+   "src": "03_dials/SKX 42 (first set)/SKX42 · Seiko Silver Sunburst Watch Dial.png",
+   "type": "dial",
+   "family": "SKX",
+   "label": "SKX 42 dial · silver",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_SKX_emerald",
+   "src": "03_dials/SKX 42 (first set)/SKX42 · Emerald Seiko Diver Dial.png",
+   "type": "dial",
+   "family": "SKX",
+   "label": "SKX 42 dial · emerald",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "dial_SKX_navy",
+   "src": "03_dials/SKX 42 (first set)/SKX42 · Navy Blue Seiko Diver Watch Dial.png",
+   "type": "dial",
+   "family": "SKX",
+   "label": "SKX 42 dial · navy",
+   "fit": "round",
+   "diameter_mm": 28.5,
+   "date": "3"
+  },
+  {
+   "id": "ring_SKX_brushed",
+   "src": "02_bezels/SKX42 · Brushed Steel Watch Minute Track Ring (chapter ring).png",
+   "type": "ring",
+   "family": "SKX",
+   "label": "SKX 42 chapter ring · brushed steel",
+   "fit": "round",
+   "diameter_mm": 30.5
+  },
+  {
+   "id": "hands_SKX_mercedes_hour",
+   "src": "04_hands/SKX42 · Mercedes-Style Luminous Watch Hand.png",
+   "type": "hand",
+   "family": "SKX",
+   "label": "SKX 42 hands · Mercedes · hour (v1)",
+   "fit": "hand",
+   "hand": "hour",
+   "length_px": 166,
+   "set": "hands_SKX_mercedes_v1_dropped"
+  },
+  {
+   "id": "hands_SKX_mercedes_hour_v2",
+   "src": "04_hands/SKX42 · Centered Mercedes-Style Watch Hand.png",
+   "type": "hand",
+   "family": "SKX",
+   "label": "SKX 42 hands · Mercedes · hour",
+   "fit": "hand",
+   "hand": "hour",
+   "length_px": 166,
+   "set": "hands_SKX_mercedes",
+   "note": "alternative hour hand"
+  },
+  {
+   "id": "hands_SKX_mercedes_minute",
+   "src": "04_hands/SKX42 · Isolated Luminous Sword Watch Hand.png",
+   "type": "hand",
+   "family": "SKX",
+   "label": "SKX 42 hands · Mercedes · minute (v1)",
+   "fit": "hand",
+   "hand": "minute",
+   "length_px": 244,
+   "set": "hands_SKX_mercedes_v1_dropped"
+  },
+  {
+   "id": "hands_SKX_mercedes_minute_v2",
+   "src": "04_hands/SKX42 · Centered Silver Watch Hand with Luminous Inlay.png",
+   "type": "hand",
+   "family": "SKX",
+   "label": "SKX 42 hands · Mercedes · minute",
+   "fit": "hand",
+   "hand": "minute",
+   "length_px": 244,
+   "set": "hands_SKX_mercedes",
+   "note": "unclear if hour or minute; check"
+  },
+  {
+   "id": "hands_SKX_mercedes_second",
+   "src": "04_hands/SKX42 · Centered Polished Watch Seconds Hand.png",
+   "type": "hand",
+   "family": "SKX",
+   "label": "SKX 42 hands · Mercedes · second",
+   "fit": "hand",
+   "hand": "second",
+   "length_px": 254,
+   "set": "hands_SKX_mercedes"
+  },
+  {
+   "id": "bracelet_SKX_jubilee_steel",
+   "src": "05_bracelets_straps/SKX42 · Stainless Steel Jubilee Bracelet Split View.png",
+   "type": "bracelet",
+   "family": "SKX",
+   "label": "SKX 42 bracelet · 5-link steel",
+   "fit": "bracelet",
+   "width_mm": 22
+  },
+  {
+   "id": "bracelet_SKX_oyster_steel",
+   "src": "05_bracelets_straps/SKX42 · Stainless Steel Watch Bracelet Cutout.png",
+   "type": "bracelet",
+   "family": "SKX",
+   "label": "SKX 42 bracelet · 3-link steel",
+   "fit": "bracelet",
+   "width_mm": 22
+  },
+  {
+   "id": "bracelet_SKX_oyster_steel_v2",
+   "src": "05_bracelets_straps/SKX42 · Isolated Stainless Steel Watch Bracelet.png",
+   "type": "bracelet",
+   "family": "SKX",
+   "label": "SKX 42 bracelet · 3-link steel (alt)",
+   "fit": "bracelet",
+   "width_mm": 22,
+   "note": "alternative"
+  },
+  {
+   "id": "strap_SKX_rubber_black",
+   "src": "05_bracelets_straps/SKX42 · Disassembled Black Dive Watch Strap.png",
+   "type": "bracelet",
+   "family": "SKX",
+   "label": "SKX 42 strap · black rubber",
+   "fit": "bracelet",
+   "width_mm": 22
+  },
+  {
+   "id": "strap_SKX_leather_brown",
+   "src": "05_bracelets_straps/SKX42 · Vintage Brown Leather Watch Strap Set.png",
+   "type": "bracelet",
+   "family": "SKX",
+   "label": "SKX 42 strap · brown leather",
+   "fit": "bracelet",
+   "width_mm": 22
+  },
+  {
+   "id": "bezel_SKX_dive_black",
+   "src": "02_bezels/bezel_SKX_dive_black.png",
+   "type": "bezel",
+   "family": "SKX",
+   "label": "SKX 42 bezel · black dive insert",
+   "fit": "round",
+   "diameter_mm": 42,
+   "note": "Right-hand bezel from 'Bare Steel Dive Watch Case and Bezel', isolated in Phase 1 (opening cut to 31 mm)."
+  }
+ ],
+ "bracelet_canvas_px": [
+  1024,
+  2560
+ ],
+ "note_bracelet": "Bracelets/straps are normalised on a 1024x2560 canvas (centre 512,1280) at width_mm; the site scales them in CSS by families_live[family].lug_mm / width_mm."
+}

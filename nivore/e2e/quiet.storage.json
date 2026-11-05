@@ -1,0 +1,6 @@
+{
+  "cookies": [],
+  "origins": [
+    { "origin": "http://localhost:3200", "localStorage": [{ "name": "nv_welcome_v1", "value": "{\"state\":\"closed\",\"at\":4102444800000}" }] }
+  ]
+}

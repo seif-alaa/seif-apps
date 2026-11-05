@@ -1,0 +1,697 @@
+[
+ {
+  "id": "case_CL_steel",
+  "src": "01_cases/case_CL_steel.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "case_CL_rosegold",
+  "src": "01_cases/case_CL_rosegold.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "case_DV_steel",
+  "src": "01_cases/case_DV_steel.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "bezel_CL_fluted_steel",
+  "src": "02_bezels/bezel_CL_fluted_steel.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "bezel_CL_fluted_yellowgold",
+  "src": "02_bezels/bezel_CL_fluted_yellowgold.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "bezel_CL_fluted_rosegold",
+  "src": "02_bezels/bezel_CL_fluted_rosegold.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "bezel_PU_smooth_steel",
+  "src": "02_bezels/bezel_PU_smooth_steel.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.99)",
+  "scale": 0.583,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "bezel_DV_green_ceramic",
+  "src": "02_bezels/bezel_DV_green_ceramic.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "bezel_GM_black_grey",
+  "src": "02_bezels/bezel_GM_black_grey.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "bezel_GM_blue_black",
+  "src": "02_bezels/bezel_GM_blue_black.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "hands_CL_steel_hour",
+  "src": "04_hands/hands_CL_steel_hour.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "hands_CL_steel_minute",
+  "src": "04_hands/hands_CL_steel_minute.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.97)",
+  "scale": 0.425,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_CL_steel_second",
+  "src": "04_hands/hands_CL_steel_second.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.95)",
+  "scale": 0.431,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_CL_rosegold_hour",
+  "src": "04_hands/hands_CL_rosegold_hour.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.99)",
+  "scale": 0.313,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_CL_rosegold_minute",
+  "src": "04_hands/hands_CL_rosegold_minute.png",
+  "status": "ok",
+  "background": "had_alpha+rembg_rejected(0.78)",
+  "scale": 0.427,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_CL_rosegold_second",
+  "src": "04_hands/hands_CL_rosegold_second.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.89)",
+  "scale": 0.452,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_GM_gmt_red",
+  "src": "04_hands/hands_GM_gmt_red.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.97)",
+  "scale": 0.426,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "bracelet_CL_jubilee_halfgold",
+  "src": "05_bracelets_straps/bracelet_CL_jubilee_halfgold.png",
+  "status": "ok",
+  "background": "had_alpha+rembg_rejected(0.06)",
+  "scale": 1.309,
+  "canvas": [
+   1024,
+   2560
+  ],
+  "cropped_px": 0
+ },
+ {
+  "id": "bracelet_CL_jubilee_halfrosegold",
+  "src": "05_bracelets_straps/bracelet_CL_jubilee_halfrosegold.png",
+  "status": "ok",
+  "background": "had_alpha+rembg_rejected(0.09)",
+  "scale": 1.398,
+  "canvas": [
+   1024,
+   2560
+  ],
+  "cropped_px": 0
+ },
+ {
+  "id": "dial_CL_roman_silver",
+  "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_roman_silver.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "dial_CL_roman_ice-blue",
+  "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_roman_ice-blue.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "dial_CL_roman_olive",
+  "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_roman_olive.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "dial_CL_arabic_azure",
+  "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_arabic_azure.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "dial_CL_arabic_baby-blue",
+  "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_arabic_baby-blue.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "dial_CL_arabic_midnight-blue",
+  "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_arabic_midnight-blue.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "dial_CL_arabic_black",
+  "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_arabic_black.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.99)",
+  "scale": 0.473,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "dial_CL_arabic_olive",
+  "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_arabic_olive.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "dial_CL_arabic_olive_rosegold",
+  "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_arabic_olive_rosegold.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "dial_CL_lume_black",
+  "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_lume_black.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.99)",
+  "scale": 0.464,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "dial_CL_stick_navy",
+  "src": "03_dials/Classic 36 (Datejust-style)/dial_CL_stick_navy.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "dial_PU_stick_tiffany",
+  "src": "03_dials/Pure 36 (OP-style)/dial_PU_stick_tiffany.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.99)",
+  "scale": 0.491,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "dial_DV_lume_black",
+  "src": "03_dials/Diver 40 (Sub-style)/dial_DV_lume_black.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.99)",
+  "scale": 0.47,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "dial_GM_lume_black",
+  "src": "03_dials/GMT 40/dial_GM_lume_black.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.99)",
+  "scale": 0.465,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "case_CL_yellowgold",
+  "src": "01_cases/case_CL_yellowgold.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "case_LC_steel",
+  "src": "01_cases/case_LC_steel.png",
+  "status": "ok",
+  "background": "had_alpha+rembg_rejected(0.79)",
+  "scale": 0.6,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "case_SA_steel",
+  "src": "01_cases/case_SA_steel.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "case_CH_steel",
+  "src": "01_cases/case_CH_steel.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "case_CH_rosegold",
+  "src": "01_cases/case_CH_rosegold.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "case_OC_steel",
+  "src": "01_cases/case_OC_steel.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "case_SQ_steel",
+  "src": "01_cases/case_SQ_steel.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "case_HC_steel",
+  "src": "01_cases/case_HC_steel.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.86)",
+  "scale": 0.757,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "bezel_LC_fluted_steel",
+  "src": "02_bezels/bezel_LC_fluted_steel.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.86)",
+  "scale": 0.522,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "bezel_LC_fluted_yellowgold",
+  "src": "02_bezels/bezel_LC_fluted_yellowgold.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 0.561,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "bezel_LC_fluted_rosegold",
+  "src": "02_bezels/bezel_LC_fluted_rosegold.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "bezel_DV_gold_blue_ceramic",
+  "src": "02_bezels/bezel_DV_gold_blue_ceramic.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "bezel_GM_brown_black_gold",
+  "src": "02_bezels/bezel_GM_brown_black_gold.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "bezel_SA_raised_steel",
+  "src": "02_bezels/bezel_SA_raised_steel.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "bezel_SA_raised_black",
+  "src": "02_bezels/bezel_SA_raised_black.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "bezel_CH_tachy_black",
+  "src": "02_bezels/bezel_CH_tachy_black.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "bezel_CH_tachy_brown_rosegold",
+  "src": "02_bezels/bezel_CH_tachy_brown_rosegold.png",
+  "status": "MISSING"
+ },
+ {
+  "id": "hands_CL_yellowgold_hour",
+  "src": "04_hands/hands_CL_yellowgold_hour.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.96)",
+  "scale": 0.314,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_CL_yellowgold_minute",
+  "src": "04_hands/hands_CL_yellowgold_minute.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.94)",
+  "scale": 0.421,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_CL_yellowgold_second",
+  "src": "04_hands/hands_CL_yellowgold_second.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.97)",
+  "scale": 0.446,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_DV_gold_mercedes_hour",
+  "src": "04_hands/hands_DV_gold_mercedes_hour.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.88)",
+  "scale": 0.272,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_DV_gold_mercedes_minute",
+  "src": "04_hands/hands_DV_gold_mercedes_minute.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 0.405,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_DV_gold_mercedes_second",
+  "src": "04_hands/hands_DV_gold_mercedes_second.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.97)",
+  "scale": 0.318,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_SQ_blued_sword_hour",
+  "src": "04_hands/hands_SQ_blued_sword_hour.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 0.314,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_SQ_blued_sword_minute",
+  "src": "04_hands/hands_SQ_blued_sword_minute.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 0.389,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_SQ_blued_sword_second",
+  "src": "04_hands/hands_SQ_blued_sword_second.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.97)",
+  "scale": 0.432,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_OC_baton_lume_hour",
+  "src": "04_hands/hands_OC_baton_lume_hour.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.99)",
+  "scale": 0.268,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_OC_baton_lume_minute",
+  "src": "04_hands/hands_OC_baton_lume_minute.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 0.431,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "case_SKX_steel",
+  "src": "01_cases/SKX42 \u00b7 skx_42mm_stainless_case_1024.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.99)",
+  "scale": 0.997,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "case_SKX_steel_v2",
+  "src": "01_cases/SKX42 \u00b7 Empty Stainless Steel Diver Watch Case.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.96)",
+  "scale": 0.847,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "case_SKX_steel_withbezel",
+  "src": "01_cases/SKX42 \u00b7 Bare Steel Dive Watch Case and Bezel.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 1.043,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "dial_SKX_black",
+  "src": "03_dials/SKX 42 (first set)/SKX42 \u00b7 Seiko-Style Black Diver Watch Dial.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 0.523,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "dial_SKX_silver",
+  "src": "03_dials/SKX 42 (first set)/SKX42 \u00b7 Seiko Silver Sunburst Watch Dial.png",
+  "status": "ok",
+  "background": "had_alpha+rembg_rejected(0.31)",
+  "scale": 0.491,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "dial_SKX_emerald",
+  "src": "03_dials/SKX 42 (first set)/SKX42 \u00b7 Emerald Seiko Diver Dial.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 0.527,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "dial_SKX_navy",
+  "src": "03_dials/SKX 42 (first set)/SKX42 \u00b7 Navy Blue Seiko Diver Watch Dial.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 0.583,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "ring_SKX_brushed",
+  "src": "02_bezels/SKX42 \u00b7 Brushed Steel Watch Minute Track Ring (chapter ring).png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 0.514,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_SKX_mercedes_hour",
+  "src": "04_hands/SKX42 \u00b7 Mercedes-Style Luminous Watch Hand.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.97)",
+  "scale": 0.293,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_SKX_mercedes_hour_v2",
+  "src": "04_hands/SKX42 \u00b7 Centered Mercedes-Style Watch Hand.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 0.234,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_SKX_mercedes_minute",
+  "src": "04_hands/SKX42 \u00b7 Isolated Luminous Sword Watch Hand.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.90)",
+  "scale": 0.31,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_SKX_mercedes_minute_v2",
+  "src": "04_hands/SKX42 \u00b7 Centered Silver Watch Hand with Luminous Inlay.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.97)",
+  "scale": 0.286,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "hands_SKX_mercedes_second",
+  "src": "04_hands/SKX42 \u00b7 Centered Polished Watch Seconds Hand.png",
+  "status": "ok",
+  "background": "had_alpha+rembg_rejected(0.84)",
+  "scale": 0.355,
+  "canvas": [
+   1024,
+   1024
+  ]
+ },
+ {
+  "id": "bracelet_SKX_jubilee_steel",
+  "src": "05_bracelets_straps/SKX42 \u00b7 Stainless Steel Jubilee Bracelet Split View.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 1.619,
+  "canvas": [
+   1024,
+   2560
+  ],
+  "cropped_px": 130
+ },
+ {
+  "id": "bracelet_SKX_oyster_steel",
+  "src": "05_bracelets_straps/SKX42 \u00b7 Stainless Steel Watch Bracelet Cutout.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.99)",
+  "scale": 1.511,
+  "canvas": [
+   1024,
+   2560
+  ],
+  "cropped_px": 0
+ },
+ {
+  "id": "bracelet_SKX_oyster_steel_v2",
+  "src": "05_bracelets_straps/SKX42 \u00b7 Isolated Stainless Steel Watch Bracelet.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.95)",
+  "scale": 1.959,
+  "canvas": [
+   1024,
+   2560
+  ],
+  "cropped_px": 63
+ },
+ {
+  "id": "strap_SKX_rubber_black",
+  "src": "05_bracelets_straps/SKX42 \u00b7 Disassembled Black Dive Watch Strap.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 1.841,
+  "canvas": [
+   1024,
+   2560
+  ],
+  "cropped_px": 234
+ },
+ {
+  "id": "strap_SKX_leather_brown",
+  "src": "05_bracelets_straps/SKX42 \u00b7 Vintage Brown Leather Watch Strap Set.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.98)",
+  "scale": 2.616,
+  "canvas": [
+   1024,
+   2560
+  ],
+  "cropped_px": 720
+ },
+ {
+  "id": "bezel_SKX_dive_black",
+  "src": "02_bezels/bezel_SKX_dive_black.png",
+  "status": "ok",
+  "background": "had_alpha+rembg(0.99)",
+  "scale": 0.998,
+  "canvas": [
+   1024,
+   1024
+  ]
+ }
+]
